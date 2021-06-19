@@ -9,6 +9,14 @@ import (
 )
 
 type Reader struct {
+	// zr contains three files:
+	// - manifest.json
+	// - scratch.sb3
+	// - icon.svg
+	// scratch.sb3 contains several files. one example i have has these:
+	// - project.json
+	// - 14d134f088239ac481523b3c2c6ecd8c.svg
+	// - 93ca32a536da1698ea979f183679af29.png
 	zr *zip.Reader
 }
 
