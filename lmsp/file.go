@@ -1,20 +1,60 @@
 package lmsp
 
-import "os"
+import (
+	"archive/zip"
+	"encoding/json"
+	"errors"
+	"io"
+	"os"
+)
 
-type File struct {
-	f *os.File
+type Reader struct {
+	zr *zip.Reader
 }
 
-func Open(path string) (*File, error) {
-	f, err := os.Open(path)
+var ErrNoManifest = errors.New("no manifest found")
+
+func ReadFile(f *os.File) (*Reader, error) {
+	st, err := f.Stat()
 	if err != nil {
 		return nil, err
 	}
 
-	return &File{f: f}, nil
+	return Read(f, st.Size())
 }
 
-func (f *File) Close() error {
-	return f.f.Close()
+func Read(r io.ReaderAt, size int64) (*Reader, error) {
+	zr, err := zip.NewReader(r, size)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Reader{zr: zr}, nil
+}
+
+func (r *Reader) Manifest() (Manifest, error) {
+	var res Manifest
+
+	f := r.get("manifest.json")
+	if f == nil {
+		return res, ErrNoManifest
+	}
+
+	fr, err := f.Open()
+	if err != nil {
+		return res, err
+	}
+	defer fr.Close()
+
+	err = json.NewDecoder(fr).Decode(&res)
+	return res, err
+}
+
+func (r *Reader) get(name string) *zip.File {
+	for _, f := range r.zr.File {
+		if f.Name == name {
+			return f
+		}
+	}
+	return nil
 }
