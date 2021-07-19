@@ -455,8 +455,8 @@ type ProjectBlockObject struct {
 
 	// A top-level block object also has the x- and y-coordinates of the
 	// block in the code area as x and y.
-	X int `json:"x"`
-	Y int `json:"y"`
+	X *int `json:"x,omitempty"`
+	Y *int `json:"y,omitempty"`
 
 	// A block with a comment attached has a comment property whose value
 	// is the comment's ID.
