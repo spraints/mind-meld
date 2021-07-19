@@ -464,7 +464,7 @@ type ProjectBlockObject struct {
 
 	// A block with a mutation also has a mutation property whose value is
 	// an object representing the mutation.
-	Mutation TODO `json:"mutation,omitempty"`
+	Mutation *ProjectMutation `json:"mutation,omitempty"`
 }
 
 func (o ProjectBlockObject) Description() string {
@@ -472,6 +472,39 @@ func (o ProjectBlockObject) Description() string {
 }
 
 type ProjectField TODO // [name, optional ID of field's value]
+
+// Mutations are present on blocks where the opcode property is equal to
+// "procedures_call" (i.e.  'custom block') or "procedures_prototype" (i.e. the
+// inner part of 'define [custom block]'). Mutations have the following
+// properties:
+type ProjectMutation struct {
+	// Always equal to "mutation".
+	TagName string `json:"tagName"`
+
+	// Seems to always be an empty array.
+	Children TODO `json:"children"`
+
+	// The name of the custom block, including inputs: %s for string/number
+	// inputs and %b for boolean inputs.
+	ProcCode string `json:"proccode"`
+
+	// An array of the ids of the arguments; these can also be found in the
+	// input property of the main block.
+	ArgumentIDs TODO `json:"argumentids"`
+
+	// An array of the names of the arguments. This is only present when
+	// the block has an opcode of procedures_prototype.
+	ArgumentNames TODO `json:"argumentnames"`
+
+	// An array of the defaults of the arguments; for string/number
+	// arguments, this is an empty string, and for boolean arguments it is
+	// false. This is only present when the block has an opcode of
+	// procedures_prototype.
+	ArgumentDefaults TODO `json:"argumentdefaults"`
+
+	// Whether to run the block without screen refresh or not.
+	Warp string `json:"warp"`
+}
 
 type ProjectComment TODO
 
