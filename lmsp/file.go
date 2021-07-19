@@ -2,9 +2,11 @@ package lmsp
 
 import (
 	"archive/zip"
+	"bytes"
 	"encoding/json"
 	"errors"
 	"io"
+	"io/ioutil"
 	"os"
 )
 
@@ -20,7 +22,11 @@ type Reader struct {
 	zr *zip.Reader
 }
 
-var ErrNoManifest = errors.New("no manifest found")
+var (
+	ErrNoManifest = errors.New("no manifest found")
+	ErrNoScratch  = errors.New("no scratch data found")
+	ErrNoProject  = errors.New("no project found")
+)
 
 func ReadFile(f *os.File) (*Reader, error) {
 	st, err := f.Stat()
@@ -40,10 +46,11 @@ func Read(r io.ReaderAt, size int64) (*Reader, error) {
 	return &Reader{zr: zr}, nil
 }
 
+// Manifest reads the manifest header information from the file.
 func (r *Reader) Manifest() (Manifest, error) {
 	var res Manifest
 
-	f := r.get("manifest.json")
+	f := get(r.zr, "manifest.json")
 	if f == nil {
 		return res, ErrNoManifest
 	}
@@ -58,8 +65,47 @@ func (r *Reader) Manifest() (Manifest, error) {
 	return res, err
 }
 
-func (r *Reader) get(name string) *zip.File {
-	for _, f := range r.zr.File {
+// Project reads the scratch project and programs from the file.
+func (r *Reader) Project() (Project, error) {
+	var res Project
+
+	f := get(r.zr, "scratch.sb3")
+	if f == nil {
+		return res, ErrNoScratch
+	}
+
+	fr, err := f.Open()
+	if err != nil {
+		return res, err
+	}
+	defer fr.Close()
+
+	data, err := ioutil.ReadAll(fr)
+	if err != nil {
+		return res, err
+	}
+	zr, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
+	if err != nil {
+		return res, err
+	}
+
+	f = get(zr, "project.json")
+	if f == nil {
+		return res, ErrNoProject
+	}
+
+	pr, err := f.Open()
+	if err != nil {
+		return res, err
+	}
+	defer pr.Close()
+
+	err = json.NewDecoder(pr).Decode(&res)
+	return res, err
+}
+
+func get(r *zip.Reader, name string) *zip.File {
+	for _, f := range r.File {
 		if f.Name == name {
 			return f
 		}
