@@ -22,8 +22,8 @@ type Project struct {
 // ProjectExtension is an identifier of a scratch extension used by this project.
 type ProjectExtension string
 
-type ProjectMonitor interface{} // todo
-type ProjectMeta interface{}    // todo
+type ProjectMonitor TODO // todo
+type ProjectMeta TODO    // todo
 
 // ProjectTarget is the stage or a sprite.
 type ProjectTarget struct {
@@ -217,6 +217,19 @@ func (b *ProjectBlocks) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+const (
+	projectBlockNumber          int = 4
+	projectBlockPositiveNumber      = 5
+	projectBlockPositiveInteger     = 6
+	projectBlockInteger             = 7
+	projectBlockAngle               = 8
+	projectBlockColor               = 9
+	projectBlockString              = 10
+	projectBlockBroadcast           = 11
+	projectBlockVariable            = 12
+	projectBlockList                = 13
+)
+
 func unmarshalProjectBlock(data json.RawMessage) (ProjectBlock, error) {
 	dec := json.NewDecoder(bytes.NewReader(data))
 	tok, err := dec.Token()
@@ -229,9 +242,62 @@ func unmarshalProjectBlock(data json.RawMessage) (ProjectBlock, error) {
 	}
 	switch delim {
 	case '[':
-		var res ProjectBlockSlice
-		err := json.Unmarshal(data, &res)
-		return &res, err
+		var vals []interface{}
+		err := json.Unmarshal(data, &vals)
+		if err != nil {
+			return nil, err
+		}
+		if len(vals) < 1 {
+			return nil, errors.Errorf("expected at least one element in array")
+		}
+		fcode, ok := vals[0].(float64)
+		if !ok {
+			return nil, errors.Errorf("expected first element (%+v, %T) to be a number in %q", vals[0], vals[0], data)
+		}
+		code := int(fcode)
+		switch code {
+		case projectBlockNumber, projectBlockPositiveNumber:
+			return &ProjectBlockNumber{
+				code:  code,
+				Value: vals[1].(float64),
+			}, nil
+		case projectBlockPositiveInteger, projectBlockInteger:
+			return &ProjectBlockInt{
+				code:  code,
+				Value: vals[1].(int64),
+			}, nil
+		case projectBlockAngle:
+			return &ProjectBlockAngle{
+				Value: vals[1].(float64),
+			}, nil
+		case projectBlockColor:
+			return &ProjectBlockColor{
+				Value: vals[1].(string),
+			}, nil
+		case projectBlockString:
+			return &ProjectBlockString{
+				Value: vals[1].(string),
+			}, nil
+		case projectBlockBroadcast:
+			return &ProjectBlockBroadcast{
+				Name: vals[1].(string),
+				ID:   ProjectBroadcastID(vals[2].(string)),
+			}, nil
+		case projectBlockVariable:
+			return &ProjectBlockVariable{
+				Name:   vals[1].(string),
+				ID:     ProjectVariableID(vals[2].(string)),
+				Coords: vals[3:],
+			}, nil
+		case projectBlockList:
+			return &ProjectBlockList{
+				Name:   vals[1].(string),
+				ID:     ProjectListID(vals[2].(string)),
+				Coords: vals[3:],
+			}, nil
+		default:
+			return nil, errors.Errorf("unrecognized block type in %q", data)
+		}
 	case '{':
 		var res ProjectBlockObject
 		err := json.Unmarshal(data, &res)
@@ -243,7 +309,76 @@ func unmarshalProjectBlock(data json.RawMessage) (ProjectBlock, error) {
 
 type ProjectBlock interface{} // TODO - probably want to replace the 'map[blah]ProjectBlock' with ProjectBlockList which is a map[blah]ProjectBlock where ProjectBlock is an interface and ProjectBlockList implements unmarshalling correctly. :(
 
-type ProjectBlockSlice interface{}
+type ProjectBlockNumber struct {
+	code  int
+	Value float64
+}
+
+func (n ProjectBlockNumber) MarshalJSON() ([]byte, error) {
+	return json.Marshal([]interface{}{n.code, n.Value})
+}
+
+type ProjectBlockInt struct {
+	code  int
+	Value int64
+}
+
+func (n ProjectBlockInt) MarshalJSON() ([]byte, error) {
+	return json.Marshal([]interface{}{n.code, n.Value})
+}
+
+type ProjectBlockAngle struct {
+	Value float64
+}
+
+func (n ProjectBlockAngle) MarshalJSON() ([]byte, error) {
+	return json.Marshal([]interface{}{projectBlockAngle, n.Value})
+}
+
+type ProjectBlockColor struct {
+	Value string
+}
+
+func (n ProjectBlockColor) MarshalJSON() ([]byte, error) {
+	return json.Marshal([]interface{}{projectBlockColor, n.Value})
+}
+
+type ProjectBlockString struct {
+	Value string
+}
+
+func (n ProjectBlockString) MarshalJSON() ([]byte, error) {
+	return json.Marshal([]interface{}{projectBlockString, n.Value})
+}
+
+type ProjectBlockBroadcast struct {
+	Name string
+	ID   ProjectBroadcastID
+}
+
+func (n ProjectBlockBroadcast) MarshalJSON() ([]byte, error) {
+	return json.Marshal([]interface{}{projectBlockBroadcast, n.Name, n.ID})
+}
+
+type ProjectBlockVariable struct {
+	Name   string
+	ID     ProjectVariableID
+	Coords []interface{}
+}
+
+func (n ProjectBlockVariable) MarshalJSON() ([]byte, error) {
+	return json.Marshal(append([]interface{}{projectBlockVariable, n.Name, n.ID}, n.Coords...))
+}
+
+type ProjectBlockList struct {
+	Name   string
+	ID     ProjectListID
+	Coords []interface{}
+}
+
+func (n ProjectBlockList) MarshalJSON() ([]byte, error) {
+	return json.Marshal(append([]interface{}{projectBlockList, n.Name, n.ID}, n.Coords...))
+}
 
 type ProjectBlockObject struct {
 	// A string naming the block. The opcode of a "core" block may be found
@@ -269,7 +404,7 @@ type ProjectBlockObject struct {
 	// representing it as described in the table below. If there is an
 	// obscured shadow, the third element is its ID or an array
 	// representing it.
-	Inputs interface{} `json:"inputs"`
+	Inputs TODO `json:"inputs"`
 
 	// An object associating names with arrays representing fields. The
 	// first element of each array is the field's value. For certain
@@ -294,13 +429,15 @@ type ProjectBlockObject struct {
 
 	// A block with a mutation also has a mutation property whose value is
 	// an object representing the mutation.
-	Mutation interface{} `json:"mutation,omitempty"`
+	Mutation TODO `json:"mutation,omitempty"`
 }
 
-type ProjectField interface{} // [name, optional ID of field's value]
+type ProjectField TODO // [name, optional ID of field's value]
 
-type ProjectComment interface{} // TODO
+type ProjectComment TODO
 
-type ProjectCostume interface{} // TODO
+type ProjectCostume TODO
 
-type ProjectSound interface{} // TODO
+type ProjectSound TODO
+
+type TODO interface{}
