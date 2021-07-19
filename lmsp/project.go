@@ -3,6 +3,7 @@ package lmsp
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 
 	"github.com/pkg/errors"
 )
@@ -22,8 +23,8 @@ type Project struct {
 // ProjectExtension is an identifier of a scratch extension used by this project.
 type ProjectExtension string
 
-type ProjectMonitor TODO // todo
-type ProjectMeta TODO    // todo
+type ProjectMonitor TODO
+type ProjectMeta TODO
 
 // ProjectTarget is the stage or a sprite.
 type ProjectTarget struct {
@@ -307,7 +308,9 @@ func unmarshalProjectBlock(data json.RawMessage) (ProjectBlock, error) {
 	}
 }
 
-type ProjectBlock interface{} // TODO - probably want to replace the 'map[blah]ProjectBlock' with ProjectBlockList which is a map[blah]ProjectBlock where ProjectBlock is an interface and ProjectBlockList implements unmarshalling correctly. :(
+type ProjectBlock interface {
+	Description() string
+}
 
 type ProjectBlockNumber struct {
 	code  int
@@ -316,6 +319,10 @@ type ProjectBlockNumber struct {
 
 func (n ProjectBlockNumber) MarshalJSON() ([]byte, error) {
 	return json.Marshal([]interface{}{n.code, n.Value})
+}
+
+func (n ProjectBlockNumber) Description() string {
+	return fmt.Sprintf("[number %f]", n.Value)
 }
 
 type ProjectBlockInt struct {
@@ -327,12 +334,20 @@ func (n ProjectBlockInt) MarshalJSON() ([]byte, error) {
 	return json.Marshal([]interface{}{n.code, n.Value})
 }
 
+func (n ProjectBlockInt) Description() string {
+	return fmt.Sprintf("[integer %d]", n.Value)
+}
+
 type ProjectBlockAngle struct {
 	Value float64
 }
 
 func (n ProjectBlockAngle) MarshalJSON() ([]byte, error) {
 	return json.Marshal([]interface{}{projectBlockAngle, n.Value})
+}
+
+func (n ProjectBlockAngle) Description() string {
+	return fmt.Sprintf("[angle %f]", n.Value)
 }
 
 type ProjectBlockColor struct {
@@ -343,12 +358,20 @@ func (n ProjectBlockColor) MarshalJSON() ([]byte, error) {
 	return json.Marshal([]interface{}{projectBlockColor, n.Value})
 }
 
+func (n ProjectBlockColor) Description() string {
+	return n.Value
+}
+
 type ProjectBlockString struct {
 	Value string
 }
 
 func (n ProjectBlockString) MarshalJSON() ([]byte, error) {
 	return json.Marshal([]interface{}{projectBlockString, n.Value})
+}
+
+func (n ProjectBlockString) Description() string {
+	return n.Value
 }
 
 type ProjectBlockBroadcast struct {
@@ -358,6 +381,10 @@ type ProjectBlockBroadcast struct {
 
 func (n ProjectBlockBroadcast) MarshalJSON() ([]byte, error) {
 	return json.Marshal([]interface{}{projectBlockBroadcast, n.Name, n.ID})
+}
+
+func (n ProjectBlockBroadcast) Description() string {
+	return fmt.Sprintf("[broadcast %s/%s]", n.Name, n.ID)
 }
 
 type ProjectBlockVariable struct {
@@ -370,6 +397,10 @@ func (n ProjectBlockVariable) MarshalJSON() ([]byte, error) {
 	return json.Marshal(append([]interface{}{projectBlockVariable, n.Name, n.ID}, n.Coords...))
 }
 
+func (n ProjectBlockVariable) Description() string {
+	return fmt.Sprintf("[variable %s/%s %+v]", n.Name, n.ID, n.Coords)
+}
+
 type ProjectBlockList struct {
 	Name   string
 	ID     ProjectListID
@@ -378,6 +409,10 @@ type ProjectBlockList struct {
 
 func (n ProjectBlockList) MarshalJSON() ([]byte, error) {
 	return json.Marshal(append([]interface{}{projectBlockList, n.Name, n.ID}, n.Coords...))
+}
+
+func (n ProjectBlockList) Description() string {
+	return fmt.Sprintf("[list %s/%s %+v]", n.Name, n.ID, n.Coords)
 }
 
 type ProjectBlockObject struct {
@@ -430,6 +465,10 @@ type ProjectBlockObject struct {
 	// A block with a mutation also has a mutation property whose value is
 	// an object representing the mutation.
 	Mutation TODO `json:"mutation,omitempty"`
+}
+
+func (o ProjectBlockObject) Description() string {
+	return fmt.Sprintf("[object %s]", o.Opcode)
 }
 
 type ProjectField TODO // [name, optional ID of field's value]
