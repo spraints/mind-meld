@@ -56,8 +56,5 @@ func (f fileReader) View() string {
 	if f.data == nil {
 		return start + loading
 	}
-	for _, name := range f.data.Names {
-		start = start + "- " + name + "\n"
-	}
-	return start
+	return start + f.data.JSON + "\n"
 }

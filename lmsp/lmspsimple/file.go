@@ -9,7 +9,7 @@ import (
 )
 
 type File struct {
-	Names []string
+	JSON string
 }
 
 func Read(path string) (*File, error) {
@@ -49,10 +49,15 @@ func readScratch(f fs.File) (*File, error) {
 		return nil, err
 	}
 
-	names := make([]string, 0, len(zr.File))
-	for _, f := range zr.File {
-		names = append(names, f.Name)
+	json, err := zr.Open("project.json")
+	if err != nil {
+		return nil, err
 	}
 
-	return &File{Names: names}, nil
+	data, err := io.ReadAll(json)
+	if err != nil {
+		return nil, err
+	}
+
+	return &File{JSON: string(data)}, nil
 }
