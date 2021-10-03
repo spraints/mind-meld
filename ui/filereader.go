@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"fmt"
+	"io/ioutil"
 	"path/filepath"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -24,6 +26,7 @@ func (f fileReader) read() tea.Msg {
 	if err != nil {
 		return err
 	}
+	ioutil.WriteFile("project.json", programs.Raw, 0644)
 	return programs
 }
 
@@ -56,5 +59,10 @@ func (f fileReader) View() string {
 	if f.data == nil {
 		return start + loading
 	}
-	return start + f.data.JSON + "\n"
+	return fmt.Sprintf("%stargets: %d\nmonitors: %d\nextensions: %d\n",
+		start,
+		len(f.data.Project.Targets),
+		len(f.data.Project.Monitors),
+		len(f.data.Project.Extensions),
+	)
 }

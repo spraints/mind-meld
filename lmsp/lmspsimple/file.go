@@ -3,13 +3,17 @@ package lmspsimple
 import (
 	"archive/zip"
 	"bytes"
+	"encoding/json"
 	"io"
 	"io/fs"
 	"os"
+
+	"github.com/spraints/mind-meld/lmsp"
 )
 
 type File struct {
-	JSON string
+	Raw     []byte
+	Project lmsp.Project
 }
 
 func Read(path string) (*File, error) {
@@ -49,15 +53,20 @@ func readScratch(f fs.File) (*File, error) {
 		return nil, err
 	}
 
-	json, err := zr.Open("project.json")
+	project, err := zr.Open("project.json")
 	if err != nil {
 		return nil, err
 	}
 
-	data, err := io.ReadAll(json)
+	data, err := io.ReadAll(project)
 	if err != nil {
 		return nil, err
 	}
 
-	return &File{JSON: string(data)}, nil
+	res := &File{Raw: data}
+	if err := json.Unmarshal(data, &res.Project); err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }
