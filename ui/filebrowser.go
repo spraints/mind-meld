@@ -52,27 +52,26 @@ func (f fileBrowser) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return f, nil
 		case "enter", "right":
-			newf := fileBrowser{
-				dir: filepath.Join(f.dir, f.entries[f.pos].Name()),
+			e := f.entries[f.pos]
+			path := filepath.Join(f.dir, e.Name())
+			if e.IsDir() {
+				return chdir(path)
+			} else {
+				return openfile(path)
 			}
-			return newf, newf.read
-		case "ctrl+h", "left", "b":
-			newf := fileBrowser{
-				dir: filepath.Join(f.dir, ".."),
-			}
-			return newf, newf.read
+		case "ctrl+h", "left":
+			return chdir(filepath.Dir(f.dir))
 		}
 	}
 	return f, nil
 }
 
-func (f fileBrowser) View() string {
-	const (
-		escape  = "(press ctrl+c to exit, <- to go up)\n"
-		errrr   = "!!! ERROR !!!\n"
-		loading = "... loading ...\n"
-	)
+func chdir(path string) (tea.Model, tea.Cmd) {
+	f := fileBrowser{dir: path}
+	return f, f.read
+}
 
+func (f fileBrowser) View() string {
 	start := escape + f.dir + "\n"
 
 	switch {
