@@ -6,15 +6,16 @@ import (
 	"log"
 	"os"
 
-	"github.com/spraints/mind-meld/lmsp"
-
 	"github.com/davecgh/go-spew/spew"
+
+	"github.com/spraints/mind-meld/lmsp"
+	"github.com/spraints/mind-meld/ui"
 )
 
 func main() {
 	switch len(os.Args) {
 	case 1:
-		finish(runInteractive())
+		finish(ui.Run())
 	case 2:
 		finish(dump(os.Args[1]))
 	default:
