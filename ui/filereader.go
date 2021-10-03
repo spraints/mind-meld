@@ -1,9 +1,12 @@
 package ui
 
 import (
+	"fmt"
 	"path/filepath"
 
 	tea "github.com/charmbracelet/bubbletea"
+
+	"github.com/spraints/mind-meld/lmsp/lmspsimple"
 )
 
 func openfile(path string) (tea.Model, tea.Cmd) {
@@ -12,11 +15,17 @@ func openfile(path string) (tea.Model, tea.Cmd) {
 }
 
 type fileReader struct {
-	path string
+	path      string
+	readError error
+	data      *lmspsimple.File
 }
 
 func (f fileReader) read() tea.Msg {
-	return nil
+	programs, err := lmspsimple.Read(f.path)
+	if err != nil {
+		return err
+	}
+	return programs
 }
 
 func (f fileReader) Init() tea.Cmd {
@@ -25,6 +34,10 @@ func (f fileReader) Init() tea.Cmd {
 
 func (f fileReader) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case error:
+		f.readError = msg
+	case *lmspsimple.File:
+		f.data = msg
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":
@@ -37,5 +50,12 @@ func (f fileReader) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (f fileReader) View() string {
-	return escape + f.path + "\n" + "!!! TODO !!!\n"
+	start := escape + f.path + "\n"
+	if f.readError != nil {
+		return start + f.readError.Error() + "\n"
+	}
+	if f.data == nil {
+		return start + loading
+	}
+	return start + fmt.Sprintf("%#v", f.data)
 }
