@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"fmt"
 	"path/filepath"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -57,5 +56,8 @@ func (f fileReader) View() string {
 	if f.data == nil {
 		return start + loading
 	}
-	return start + fmt.Sprintf("%#v", f.data)
+	for _, name := range f.data.Names {
+		start = start + "- " + name + "\n"
+	}
+	return start
 }
