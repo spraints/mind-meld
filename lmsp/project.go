@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"sort"
 
 	"github.com/pkg/errors"
 )
@@ -87,6 +88,33 @@ type ProjectTarget struct {
 	Direction     *int                  `json:"direction,omitempty"`
 	Draggable     *bool                 `json:"draggable,omitempty"`
 	RotationStyle *ProjectRotationStyle `json:"rotationStyle,omitempty"`
+}
+
+func (t ProjectTarget) GetRootBlockIDs() []ProjectBlockID {
+	nodes := map[ProjectBlockID]bool{}
+	for id, block := range t.Blocks {
+		switch block := block.(type) {
+		case *ProjectBlockObject:
+			if block.Next != nil {
+				nodes[*block.Next] = false
+			}
+			if block.Parent == nil {
+				if _, ok := nodes[id]; !ok {
+					nodes[id] = true
+				}
+			}
+		default:
+			panic(fmt.Sprintf("%q %T %#v", id, block, block))
+		}
+	}
+	var roots []ProjectBlockID
+	for id, isRoot := range nodes {
+		if isRoot {
+			roots = append(roots, id)
+		}
+	}
+	sort.Slice(roots, func(a, b int) bool { return roots[a] < roots[b] })
+	return roots
 }
 
 const (
@@ -506,7 +534,15 @@ type ProjectMutation struct {
 	Warp string `json:"warp"`
 }
 
-type ProjectComment TODO
+type ProjectComment struct {
+	Width     float64         `json:"width"`
+	Height    float64         `json:"height"`
+	Minimized bool            `json:"minimized"`
+	Text      string          `json:"text"`
+	BlockID   *ProjectBlockID `json:"blockId"`
+	X         float64         `json:"x"`
+	Y         float64         `json:"y"`
+}
 
 type ProjectCostume TODO
 
