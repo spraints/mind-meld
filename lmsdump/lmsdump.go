@@ -31,7 +31,7 @@ func dumpBlockChain(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlock
 	prefix := startPrefix
 	for {
 		block := target.Blocks[id].(*lmsp.ProjectBlockObject)
-		dumpBlock(w, id, block, prefix)
+		dumpBlock(w, target, id, block, prefix)
 		if block.Next == nil {
 			break
 		}
@@ -40,15 +40,30 @@ func dumpBlockChain(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlock
 	}
 }
 
-func dumpBlock(w io.Writer, id lmsp.ProjectBlockID, block *lmsp.ProjectBlockObject, prefix string) {
-	fmt.Fprintf(w, "%s%s %s\n", prefix, id, block.Opcode)
+func dumpBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID, block *lmsp.ProjectBlockObject, prefix string) {
 	p := pad(prefix)
 	inputs := block.Inputs.(map[string]interface{})
-	for name, input := range inputs {
-		fmt.Fprintf(w, "%s - %s = %s\n", p, name, describeInput(input))
-	}
-	for name, field := range block.Fields {
-		fmt.Fprintf(w, "%s field %s = %#v\n", p, name, field)
+	switch block.Opcode {
+	case "operator_subtract":
+		fmt.Fprintf(w, "%s%s Subtract %v - %v\n", prefix, id, describeInput(inputs["NUM1"]), describeInput(inputs["NUM2"]))
+	case "procedures_definition":
+		fmt.Fprintf(w, "%s%s Myblock\n", prefix, id)
+		in := inputs["custom_block"].([]interface{})
+		protoID := lmsp.ProjectBlockID(in[1].(string))
+		dumpBlock(w, target, protoID, target.Blocks[protoID].(*lmsp.ProjectBlockObject), p)
+	case "procedures_prototype":
+		fmt.Fprintf(w, "%s%s Myblock prototype\n", prefix, id)
+		// TODO
+		fmt.Fprintf(w, "%s - inputs: %#v\n", p, inputs)
+		fmt.Fprintf(w, "%s - mutation: %#v\n", p, block.Mutation)
+	default:
+		fmt.Fprintf(w, "%s%s %s\n", prefix, id, block.Opcode)
+		for name, input := range inputs {
+			fmt.Fprintf(w, "%s - %s = %s\n", p, name, describeInput(input))
+		}
+		for name, field := range block.Fields {
+			fmt.Fprintf(w, "%s field %s = %#v\n", p, name, field)
+		}
 	}
 }
 
