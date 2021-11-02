@@ -1,9 +1,7 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/davecgh/go-spew/spew"

@@ -44,18 +44,37 @@ func dumpBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID, b
 	p := pad(prefix)
 	inputs := block.Inputs.(map[string]interface{})
 	switch block.Opcode {
+	case "argument_reporter_string_number":
+		fmt.Fprintf(w, "%s%q\n", prefix, getField(block, "VALUE"))
+	case "control_repeat_until":
+		fmt.Fprintf(w, "%s%s Repeat\n", prefix, id)
+		fmt.Fprintf(w, "%s until:\n", p)
+		dumpInput(w, target, inputs, "CONDITION", p+"   ? ")
+		fmt.Fprintf(w, "%s do\n", p)
+		dumpInputChain(w, target, inputs, "SUBSTACK", p+"  >> ", p+"   + ")
+		fmt.Fprintf(w, "%s done\n", p)
+	case "flippermoremotor_motorSetDegreeCounted":
+		fmt.Fprintf(w, "%s%s Set Degree Counted\n", prefix, id)
+		fmt.Fprintf(w, "%s value: %v\n", p, describeInput(inputs["VALUE"]))
+		dumpInput(w, target, inputs, "PORT", p)
+	case "flippermoremotor_multiple-port-selector":
+		fmt.Fprintf(w, "%s port: %v\n", prefix, getField(block, "field_flippermoremotor_multiple-port-selector"))
+	case "flippersensors_resetYaw":
+		fmt.Fprintf(w, "%s%s Reset yaw\n", prefix, id)
+	case "operator_lt":
+		fmt.Fprintf(w, "%s%s Compare { %v < %v }\n", prefix, id, describeInput(inputs["OPERAND1"]), describeInput(inputs["OPERAND2"]))
 	case "operator_subtract":
-		fmt.Fprintf(w, "%s%s Subtract %v - %v\n", prefix, id, describeInput(inputs["NUM1"]), describeInput(inputs["NUM2"]))
+		fmt.Fprintf(w, "%s%s Subtract { %v - %v }\n", prefix, id, describeInput(inputs["NUM1"]), describeInput(inputs["NUM2"]))
+	case "procedures_call":
+		fmt.Fprintf(w, "%s%s Call %v\n", prefix, id, block.Mutation.ProcCode)
 	case "procedures_definition":
 		fmt.Fprintf(w, "%s%s Myblock\n", prefix, id)
-		in := inputs["custom_block"].([]interface{})
-		protoID := lmsp.ProjectBlockID(in[1].(string))
-		dumpBlock(w, target, protoID, target.Blocks[protoID].(*lmsp.ProjectBlockObject), p)
+		dumpInput(w, target, inputs, "custom_block", p)
 	case "procedures_prototype":
-		fmt.Fprintf(w, "%s%s Myblock prototype\n", prefix, id)
-		// TODO
-		fmt.Fprintf(w, "%s - inputs: %#v\n", p, inputs)
-		fmt.Fprintf(w, "%s - mutation: %#v\n", p, block.Mutation)
+		fmt.Fprintf(w, "%s%s Myblock prototype %q\n", prefix, id, block.Mutation.ProcCode)
+		for id := range inputs {
+			dumpInput(w, target, inputs, id, p+" -> "+id+" ")
+		}
 	default:
 		fmt.Fprintf(w, "%s%s %s\n", prefix, id, block.Opcode)
 		for name, input := range inputs {
@@ -65,6 +84,23 @@ func dumpBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID, b
 			fmt.Fprintf(w, "%s field %s = %#v\n", p, name, field)
 		}
 	}
+}
+
+func getField(block *lmsp.ProjectBlockObject, name lmsp.ProjectFieldName) string {
+	field := block.Fields[name].([]interface{})
+	return field[0].(string)
+}
+
+func dumpInput(w io.Writer, target lmsp.ProjectTarget, inputs map[string]interface{}, name string, prefix string) {
+	in := inputs[name].([]interface{})
+	id := lmsp.ProjectBlockID(in[1].(string))
+	dumpBlock(w, target, id, target.Blocks[id].(*lmsp.ProjectBlockObject), prefix)
+}
+
+func dumpInputChain(w io.Writer, target lmsp.ProjectTarget, inputs map[string]interface{}, name string, prefix, prefix2 string) {
+	in := inputs[name].([]interface{})
+	id := lmsp.ProjectBlockID(in[1].(string))
+	dumpBlockChain(w, target, id, prefix, prefix2)
 }
 
 var shadowStrs = []string{"(unused)", "shadow", "no shadow", "shadow obscured"}
@@ -107,6 +143,6 @@ func pad(s string) string {
 	case 4:
 		return "    "
 	default:
-		panic(len(s))
+		return " " + pad(s[1:])
 	}
 }
