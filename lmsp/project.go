@@ -150,6 +150,7 @@ func (l *ProjectLanguage) UnmarshalJSON(data []byte) error {
 }
 
 type ProjectOpcode string
+type ProjectInputID string
 type ProjectFieldName string
 type ProjectRotationStyle string
 
@@ -456,7 +457,7 @@ type ProjectBlockObject struct {
 	// representing it as described in the table below. If there is an
 	// obscured shadow, the third element is its ID or an array
 	// representing it.
-	Inputs TODO `json:"inputs"`
+	Inputs map[ProjectInputID]TODO `json:"inputs"`
 
 	// An object associating names with arrays representing fields. The
 	// first element of each array is the field's value. For certain
