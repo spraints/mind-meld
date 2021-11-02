@@ -91,26 +91,15 @@ type ProjectTarget struct {
 }
 
 func (t ProjectTarget) GetRootBlockIDs() []ProjectBlockID {
-	nodes := map[ProjectBlockID]bool{}
+	var roots []ProjectBlockID
 	for id, block := range t.Blocks {
 		switch block := block.(type) {
 		case *ProjectBlockObject:
-			if block.Next != nil {
-				nodes[*block.Next] = false
-			}
-			if block.Parent == nil {
-				if _, ok := nodes[id]; !ok {
-					nodes[id] = true
-				}
+			if block.TopLevel {
+				roots = append(roots, id)
 			}
 		default:
 			panic(fmt.Sprintf("%q %T %#v", id, block, block))
-		}
-	}
-	var roots []ProjectBlockID
-	for id, isRoot := range nodes {
-		if isRoot {
-			roots = append(roots, id)
 		}
 	}
 	sort.Slice(roots, func(a, b int) bool { return roots[a] < roots[b] })
