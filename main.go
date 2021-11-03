@@ -1,10 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"os"
-
-	"github.com/davecgh/go-spew/spew"
 
 	"github.com/spraints/mind-meld/lmsdump"
 	"github.com/spraints/mind-meld/lmsp"
@@ -42,11 +42,13 @@ func dump(path string) error {
 	if err != nil {
 		return err
 	}
-	man, err := l.Manifest()
-	if err != nil {
-		return err
-	}
-	spew.Dump(man)
+	/*
+		man, err := l.Manifest()
+		if err != nil {
+			return err
+		}
+		spew.Dump(man)
+	*/
 
 	proj, err := l.Project()
 	if err != nil {
@@ -54,14 +56,16 @@ func dump(path string) error {
 	}
 	lmsdump.Dump(os.Stdout, proj)
 
-	log.Print("writing JSON back out to 'testing.json'...")
-	f, err = os.Create("testing.json")
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	if err := json.NewEncoder(f).Encode(proj); err != nil {
-		return err
+	if os.Getenv("WRITE_PROJECT_JSON") != "" {
+		log.Print("writing JSON back out to 'testing.json'...")
+		f, err = os.Create("testing.json")
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+		if err := json.NewEncoder(f).Encode(proj); err != nil {
+			return err
+		}
 	}
 
 	// todo later - print out programs in pybricks
