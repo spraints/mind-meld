@@ -27,8 +27,12 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 	switch block.Opcode {
 	case "argument_reporter_string_number":
 		visitFieldSelector(w, target, block, "VALUE")
+	case "control_forever":
+		visitForever(w, target, block)
 	case "control_if":
 		visitControl(w, target, block, "if")
+	case "control_if_else":
+		visitIfElse(w, target, block)
 	case "control_repeat_until":
 		visitControl(w, target, block, "until")
 	case "control_wait_until":
@@ -37,6 +41,8 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		visitChangeVariableBy(w, target, block)
 	case "data_setvariableto":
 		visitSetVariableTo(w, target, block)
+	case "flippercontrol_stop":
+		visitStop(w, target, block)
 	case "flipperevents_whenProgramStarts":
 		fmt.Fprintln(w, "when program starts:")
 		w = indent(w)
@@ -50,6 +56,12 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		visitMoreMotorPosition(w, target, block)
 	case "flippermoremotor_single-motor-selector":
 		visitFieldSelector(w, target, block, "field_flippermoremotor_single-motor-selector")
+	case "flippermotor_absolutePosition":
+		visitMotorAbsolutePosition(w, target, block)
+	case "flippermotor_custom-angle":
+		visitFieldSelector(w, target, block, "field_flippermotor_custom-angle")
+	case "flippermotor_custom-icon-direction":
+		visitFieldSelector(w, target, block, "field_flippermotor_custom-icon-direction")
 	case "flippermotor_motorGoDirectionToPosition":
 		visitMotorGoDirectionToPosition(w, target, block)
 	case "flippermotor_motorSetSpeed":
@@ -58,18 +70,34 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		visitMotorStartDirection(w, target, block)
 	case "flippermotor_multiple-port-selector":
 		visitFieldSelector(w, target, block, "field_flippermotor_multiple-port-selector")
+	case "flippermotor_motorStop":
+		visitMotorStop(w, target, block)
+	case "flippermotor_single-motor-selector":
+		visitFieldSelector(w, target, block, "field_flippermotor_single-motor-selector")
+	case "flippermove_custom-icon-direction":
+		visitFieldSelector(w, target, block, "field_flippermove_custom-icon-direction")
+	case "flippermove_move":
+		visitMove(w, target, block)
 	case "flippermove_movementSpeed":
 		visitMovementSpeed(w, target, block)
 	case "flippermove_rotation-wheel":
 		visitFieldSelector(w, target, block, "field_flippermove_rotation-wheel")
 	case "flippermove_startSteer":
 		visitMoveStartSteer(w, target, block)
+	case "flippermove_steer":
+		visitMoveSteer(w, target, block)
 	case "flippermove_stopMove":
 		visitMoveStopMove(w, target, block)
+	case "flippersensors_color-sensor-selector":
+		visitFieldSelector(w, target, block, "field_flippersensors_color-sensor-selector")
+	case "flippersensors_isReflectivity":
+		visitIsReflectivity(w, target, block)
 	case "flippersensors_orientationAxis":
-		visitFieldSelector(w, target, block, "AXIS")
+		visitOrientationAxis(w, target, block)
 	case "flippersensors_resetYaw":
 		fmt.Fprintln(w, "resetYaw()")
+	case "operator_add":
+		visitBinaryOperator(w, target, block, "+", "NUM1", "NUM2")
 	case "operator_gt":
 		visitBinaryOperator(w, target, block, ">", "OPERAND1", "OPERAND2")
 	case "operator_lt":
@@ -119,6 +147,10 @@ func visitProcedurePrototype(w io.Writer, target lmsp.ProjectTarget, block *lmsp
 	// Inputs is redundant with argument names.
 }
 
+func visitStop(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	fmt.Fprintf(w, "stop(%s)\n", getField(block, "STOP_OPTION"))
+}
+
 func visitMoreMotorSetDegreeCounted(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprint(w, "setDegreesCounted(port: ")
 	visitInput(w, target, block, "PORT")
@@ -161,6 +193,20 @@ func visitMotorStartDirection(w io.Writer, target lmsp.ProjectTarget, block *lms
 	fmt.Fprintln(w, ")")
 }
 
+func visitMotorStop(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	fmt.Fprint(w, "stopMotor(port: ")
+	visitInput(w, target, block, "PORT")
+	fmt.Fprintln(w, ")")
+}
+
+func visitMove(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	fmt.Fprint(w, "move(direction: ")
+	visitInput(w, target, block, "DIRECTION")
+	fmt.Fprintf(w, ", %s: ", getField(block, "UNIT"))
+	visitInput(w, target, block, "VALUE")
+	fmt.Fprintln(w, ")")
+}
+
 func visitMovementSpeed(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprint(w, "setMovementSpeed(speed: ")
 	visitInput(w, target, block, "SPEED")
@@ -177,9 +223,23 @@ func visitMoreMotorPosition(w io.Writer, target lmsp.ProjectTarget, block *lmsp.
 	fmt.Fprint(w, ")")
 }
 
+func visitMotorAbsolutePosition(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	fmt.Fprint(w, "motorAbsolutePosition(port: ")
+	visitInput(w, target, block, "PORT")
+	fmt.Fprint(w, ")")
+}
+
 func visitMoveStartSteer(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-	fmt.Fprint(w, "startSteer(steering: ")
+	fmt.Fprint(w, "startMoveSteer(steering: ")
 	visitInput(w, target, block, "STEERING")
+	fmt.Fprintln(w, ")")
+}
+
+func visitMoveSteer(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	fmt.Fprint(w, "moveSteer(steering: ")
+	visitInput(w, target, block, "STEERING")
+	fmt.Fprintf(w, ", %s: ", getField(block, "UNIT"))
+	visitInput(w, target, block, "VALUE")
 	fmt.Fprintln(w, ")")
 }
 
@@ -187,11 +247,34 @@ func visitMoveStopMove(w io.Writer, target lmsp.ProjectTarget, block *lmsp.Proje
 	fmt.Fprintln(w, "stopMove()")
 }
 
+func visitOrientationAxis(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	fmt.Fprintf(w, "orientation(%s)", getField(block, "AXIS"))
+}
+
+func visitIsReflectivity(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	fmt.Fprint(w, "(reflectivity(port: ")
+	visitInput(w, target, block, "PORT")
+	fmt.Fprintf(w, ") %s ", getField(block, "COMPARATOR"))
+	visitInput(w, target, block, "VALUE")
+	fmt.Fprint(w, ")")
+}
+
+func visitForever(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	fmt.Fprintln(w, "forever:")
+	visitInput(indent(w), target, block, "SUBSTACK")
+}
+
 func visitControl(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject, keyword string) {
 	fmt.Fprintf(w, "%s ", keyword)
 	visitInput(w, target, block, "CONDITION")
 	fmt.Fprintln(w, ":")
 	visitInput(indent(w), target, block, "SUBSTACK")
+}
+
+func visitIfElse(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	visitControl(w, target, block, "if")
+	fmt.Fprintln(w, "else:")
+	visitInput(indent(w), target, block, "SUBSTACK2")
 }
 
 func visitWaitUntil(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
@@ -208,8 +291,7 @@ func visitChangeVariableBy(w io.Writer, target lmsp.ProjectTarget, block *lmsp.P
 }
 
 func visitSetVariableTo(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-	f := getField(block, "VARIABLE")
-	fmt.Fprintf(w, "%s = ", f)
+	fmt.Fprintf(w, "[variable %s] = ", getField(block, "VARIABLE"))
 	visitInput(w, target, block, "VALUE")
 	fmt.Fprintln(w)
 }
@@ -241,7 +323,7 @@ func visitInput(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlock
 		case 11:
 			fmt.Fprintf(w, "[broadcast %q]", v)
 		case 12:
-			fmt.Fprint(w, v)
+			fmt.Fprintf(w, "[variable %s]", v)
 		case 13:
 			fmt.Fprintf(w, "[list %q]", v)
 		default:
