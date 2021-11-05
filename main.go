@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/spraints/mind-meld/githooks"
 	"github.com/spraints/mind-meld/lmsdump"
 	"github.com/spraints/mind-meld/lmsp"
 	"github.com/spraints/mind-meld/ui"
@@ -18,10 +19,12 @@ func main() {
 	}
 
 	switch os.Args[1] {
+	case "install-githooks":
+		finish(githooks.Install())
 	case "dump":
 		finish(dump(os.Args[2]))
 	default:
-		fmt.Printf("Usage: %s [dump FILE]\n", os.Args[0])
+		fmt.Printf("Usage: %s [dump FILE | install-githooks]\n", os.Args[0])
 		os.Exit(1)
 	}
 }
