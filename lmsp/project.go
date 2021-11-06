@@ -106,6 +106,17 @@ func (t ProjectTarget) GetRootBlockIDs() []ProjectBlockID {
 	return roots
 }
 
+func (t ProjectTarget) GetStandaloneCommentIDs() []ProjectCommentID {
+	var ids []ProjectCommentID
+	for id, comment := range t.Comments {
+		if comment.BlockID == nil {
+			ids = append(ids, id)
+		}
+	}
+	sort.Slice(ids, func(a, b int) bool { return ids[a] < ids[b] })
+	return ids
+}
+
 const (
 	VideoState_On        ProjectVideoState = "on"
 	VideoState_Off                         = "off"

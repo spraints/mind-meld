@@ -23,6 +23,14 @@ func visitTarget(w io.Writer, target lmsp.ProjectTarget) {
 		fmt.Fprintf(w, "----- %s -----\n", id)
 		visitBlock(w, target, id)
 	}
+	first := true
+	for _, id := range target.GetStandaloneCommentIDs() {
+		if first {
+			fmt.Fprintln(w, "--------------------------------")
+			first = false
+		}
+		visitComment(w, target, id)
+	}
 	// todo - other fields of ProjectTarget.
 }
 
@@ -162,9 +170,16 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		fmt.Fprintf(w, "!!!TODO\n  case %q:\n    visitXYZ(w, target, block)\n  %#v!!!\n", block.Opcode, block)
 		return
 	}
+	if block.Comment != "" {
+		visitComment(w, target, block.Comment)
+	}
 	if block.Next != nil {
 		visitBlock(w, target, *block.Next)
 	}
+}
+
+func visitComment(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectCommentID) {
+	fmt.Fprintf(w, "/**** %s\n  %s\n****/\n", id, target.Comments[id].Text)
 }
 
 func visitProcedureCall(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
