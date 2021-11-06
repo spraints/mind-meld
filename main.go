@@ -20,7 +20,13 @@ func main() {
 
 	switch os.Args[1] {
 	case "pre-commit":
-		finish(githooks.RunPreCommit())
+		mode := githooks.UpdateWorkingCopy
+		for _, arg := range os.Args[2:] {
+			if arg == "--cached" {
+				mode = githooks.UpdateCache
+			}
+		}
+		finish(githooks.RunPreCommit(mode))
 	case "dump":
 		finish(dump(os.Args[2]))
 	default:

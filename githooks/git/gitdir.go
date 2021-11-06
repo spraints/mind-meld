@@ -6,7 +6,9 @@ import (
 )
 
 func GetGitDir() (string, error) {
-	path, err := exec.Command("git", "rev-parse", "--git-dir").Output()
+	cmd := exec.Command("git", "rev-parse", "--git-dir")
+	dbg(cmd)
+	path, err := cmd.Output()
 	if err != nil {
 		return "", err
 	}

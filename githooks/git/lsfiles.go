@@ -15,8 +15,10 @@ type IndexEntry struct {
 	Path  string
 }
 
-func LsFiles() ([]IndexEntry, error) {
+func LsFiles(cwd string) ([]IndexEntry, error) {
 	cmd := exec.Command("git", "ls-files", "-s")
+	dbg(cmd)
+	cmd.Dir = cwd
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return nil, err

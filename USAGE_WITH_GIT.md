@@ -8,4 +8,6 @@ Add this to `.git/hooks/pre-commit':
 
 ## Backfill text versions of programs
 
-(todo)
+Backfill using filter-branch:
+
+    git filter-branch --index-filter 'mind-meld pre-commit --cached'

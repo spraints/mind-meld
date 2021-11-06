@@ -6,7 +6,9 @@ import (
 )
 
 func GetRepoRoot() (string, error) {
-	path, err := exec.Command("git", "rev-parse", "--show-toplevel").Output()
+	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
+	dbg(cmd)
+	path, err := cmd.Output()
 	if err != nil {
 		return "", err
 	}
