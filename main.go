@@ -19,12 +19,12 @@ func main() {
 	}
 
 	switch os.Args[1] {
-	case "install-githooks":
-		finish(githooks.Install())
+	case "pre-commit":
+		finish(githooks.RunPreCommit())
 	case "dump":
 		finish(dump(os.Args[2]))
 	default:
-		fmt.Printf("Usage: %s [dump FILE | install-githooks]\n", os.Args[0])
+		fmt.Printf("Usage: %s [dump FILE]\n", os.Args[0])
 		os.Exit(1)
 	}
 }

@@ -99,7 +99,7 @@ func (t ProjectTarget) GetRootBlockIDs() []ProjectBlockID {
 				roots = append(roots, id)
 			}
 		default:
-			panic(fmt.Sprintf("%q %T %#v", id, block, block))
+			// panic(fmt.Sprintf("%q %T %#v", id, block, block))
 		}
 	}
 	sort.Slice(roots, func(a, b int) bool { return roots[a] < roots[b] })

@@ -7,11 +7,15 @@ import (
 	"github.com/spraints/mind-meld/lmsp"
 )
 
-func Dump(w io.Writer, proj lmsp.Project) {
+func Dump(w io.Writer, proj lmsp.Project) error {
 	for _, target := range proj.Targets {
-		fmt.Fprintf(w, "target: %s\n", target.Name)
+		if _, err := fmt.Fprintf(w, "target: %s\n", target.Name); err != nil {
+			return err
+		}
+		// TODO check for errors in visitTarget.
 		visitTarget(indent(w), target)
 	}
+	return nil
 }
 
 func visitTarget(w io.Writer, target lmsp.ProjectTarget) {
