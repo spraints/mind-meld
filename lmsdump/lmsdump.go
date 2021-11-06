@@ -49,6 +49,20 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		visitSetVariableTo(w, target, block)
 	case "flippercontrol_stop":
 		visitStop(w, target, block)
+	case "flipperdisplay_centerButtonLight":
+		visitDisplayCenterButtonLight(w, target, block)
+	case "flipperdisplay_color-selector-vertical":
+		visitFieldSelector(w, target, block, "field_flipperdisplay_color-selector-vertical")
+	case "flipperdisplay_custom-animate-matrix":
+		visitFieldSelector(w, target, block, "field_flipperdisplay_custom-animate-matrix")
+	case "flipperdisplay_custom-matrix":
+		visitFieldSelector(w, target, block, "field_flipperdisplay_custom-matrix")
+	case "flipperdisplay_ledAnimation":
+		visitLEDAnimation(w, target, block)
+	case "flipperdisplay_ledImage":
+		visitLEDImage(w, target, block)
+	case "flipperdisplay_ledImageFor":
+		visitLEDImageFor(w, target, block)
 	case "flipperevents_force-sensor-selector":
 		visitFieldSelector(w, target, block, "field_flipperevents_force-sensor-selector")
 	case "flipperevents_whenPressed":
@@ -115,8 +129,20 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		visitOrientationAxis(w, target, block)
 	case "flippersensors_resetYaw":
 		fmt.Fprintln(w, "resetYaw()")
+	case "flippersound_beep":
+		visitPlayBeep(w, target, block)
+	case "flippersound_custom-piano":
+		visitFieldSelector(w, target, block, "field_flippersound_custom-piano")
+	case "flippersound_playSound":
+		visitPlaySound(w, target, block)
+	case "flippersound_sound-selector":
+		visitFieldSelector(w, target, block, "field_flippersound_sound-selector")
+	case "flippersound_stopSound":
+		fmt.Fprintln(w, "stopSound()")
 	case "operator_add":
 		visitBinaryOperator(w, target, block, "+", "NUM1", "NUM2")
+	case "operator_equals":
+		visitBinaryOperator(w, target, block, "==", "OPERAND1", "OPERAND2")
 	case "operator_gt":
 		visitBinaryOperator(w, target, block, ">", "OPERAND1", "OPERAND2")
 	case "operator_lt":
@@ -133,7 +159,7 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 	case "procedures_prototype":
 		visitProcedurePrototype(w, target, block)
 	default:
-		fmt.Fprintf(w, "!!!TODO\n  case %q:\n    visitXYZ(w, target, block)\n!!!\n", block.Opcode)
+		fmt.Fprintf(w, "!!!TODO\n  case %q:\n    visitXYZ(w, target, block)\n  %#v!!!\n", block.Opcode, block)
 		return
 	}
 	if block.Next != nil {
@@ -168,6 +194,32 @@ func visitProcedurePrototype(w io.Writer, target lmsp.ProjectTarget, block *lmsp
 
 func visitStop(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprintf(w, "stop(%s)\n", getField(block, "STOP_OPTION"))
+}
+
+func visitDisplayCenterButtonLight(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	fmt.Fprint(w, "setCenterButtonLight(color: ")
+	visitInput(w, target, block, "COLOR")
+	fmt.Fprintln(w, ")")
+}
+
+func visitLEDAnimation(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	fmt.Fprint(w, "displayLEDAnimation(matrix: ")
+	visitInput(w, target, block, "MATRIX")
+	fmt.Fprintln(w, ")")
+}
+
+func visitLEDImage(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	fmt.Fprint(w, "displayLEDImage(matrix: ")
+	visitInput(w, target, block, "MATRIX")
+	fmt.Fprintln(w, ")")
+}
+
+func visitLEDImageFor(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	fmt.Fprint(w, "displayLEDImage(matrix: ")
+	visitInput(w, target, block, "MATRIX")
+	fmt.Fprint(w, ", for: ")
+	visitInput(w, target, block, "VALUE")
+	fmt.Fprintln(w, ")")
 }
 
 func visitWhenPressed(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
@@ -298,6 +350,18 @@ func visitOrientationAxis(w io.Writer, target lmsp.ProjectTarget, block *lmsp.Pr
 	fmt.Fprintf(w, "orientation(%s)", getField(block, "AXIS"))
 }
 
+func visitPlayBeep(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	fmt.Fprint(w, "beep(note: ")
+	visitInput(w, target, block, "NOTE")
+	fmt.Fprintln(w, ")")
+}
+
+func visitPlaySound(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	fmt.Fprint(w, "playSound(sound: ")
+	visitInput(w, target, block, "SOUND")
+	fmt.Fprintln(w, ")")
+}
+
 func visitIsReflectivity(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprint(w, "(reflectivity(port: ")
 	visitInput(w, target, block, "PORT")
@@ -387,5 +451,6 @@ func visitInput(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlock
 
 func getField(block *lmsp.ProjectBlockObject, name lmsp.ProjectFieldName) string {
 	field := block.Fields[name].([]interface{})
-	return field[0].(string)
+	// field[0] could be a string, float64, maybe others?
+	return fmt.Sprint(field[0])
 }
