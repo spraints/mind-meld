@@ -100,7 +100,7 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 	case "flippermoremotor_single-motor-selector":
 		visitFieldSelector(w, target, block, "field_flippermoremotor_single-motor-selector")
 	case "flippermotor_absolutePosition":
-		visitMotorAbsolutePosition(w, target, block)
+		visitAction(w, target, block, namedInputArg("PORT"))
 	case "flippermotor_custom-angle":
 		visitFieldSelector(w, target, block, "field_flippermotor_custom-angle")
 	case "flippermotor_custom-icon-direction":
@@ -120,7 +120,7 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 	case "flippermotor_single-motor-selector":
 		visitFieldSelector(w, target, block, "field_flippermotor_single-motor-selector")
 	case "flippermotor_speed":
-		visitMotorSpeed(w, target, block)
+		visitAction(w, target, block, namedInputArg("PORT"))
 	case "flippermove_custom-icon-direction":
 		visitFieldSelector(w, target, block, "field_flippermove_custom-icon-direction")
 	case "flippermove_move":
@@ -226,13 +226,17 @@ var opcodeActions = map[lmsp.ProjectOpcode]string{
 	"flipperdisplay_ledImageFor":              "turnOnPixels",
 	"flippermoremotor_motorSetDegreeCounted":  "setRelativePosition",
 	"flippermoremotor_motorTurnForSpeed":      "runMotor",
+	"flippermotor_absolutePosition":           "position",
 	"flippermotor_motorGoDirectionToPosition": "goToPosition",
 	"flippermotor_motorSetSpeed":              "setMotorSpeed",
 	"flippermotor_motorStartDirection":        "motorStart",
 	"flippermotor_motorStop":                  "stopMotor",
 	"flippermotor_motorTurnForDirection":      "run",
+	"flippermotor_speed":                      "motorSpeed",
 }
 
+// visitAction visits a block that is like a function call. These may be script
+// blocks, input blocks, or boolean blocks.
 func visitAction(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject, args ...argFn) {
 	label, ok := opcodeActions[block.Opcode]
 	if !ok {
@@ -306,12 +310,6 @@ func visitWhenPressed(w io.Writer, target lmsp.ProjectTarget, block *lmsp.Projec
 	fmt.Fprint(w, "[port ")
 	visitInput(w, target, block, "PORT")
 	fmt.Fprintf(w, "] when %s:", getField(block, "OPTION"))
-}
-
-func visitMotorSpeed(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-	fmt.Fprint(w, "motorSpeed(port: ")
-	visitInput(w, target, block, "PORT")
-	fmt.Fprint(w, ")")
 }
 
 func visitMove(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
@@ -424,7 +422,7 @@ func visitWait(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockO
 
 func visitChangeVariableBy(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	f := getField(block, "VARIABLE")
-	fmt.Fprintf(w, "%s = %s + ", f, f)
+	fmt.Fprintf(w, "[variable %s] = [variable %s] + ", f, f)
 	visitInput(w, target, block, "VALUE")
 	fmt.Fprint(w)
 }
