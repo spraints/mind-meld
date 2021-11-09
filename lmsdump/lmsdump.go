@@ -62,14 +62,14 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 	case "data_setvariableto":
 		visitSetVariableTo(w, target, block)
 	case "event_broadcast":
-		visitAction(w, target, block, "broadcast", inputArg("BROADCAST_INPUT"))
+		visitAction(w, target, block, inputArg("BROADCAST_INPUT"))
 	case "event_whenbroadcastreceived":
 		visitWhenBroadcastReceived(w, target, block)
 		w = indent(w)
 	case "flippercontrol_stop":
-		visitAction(w, target, block, "stop", fieldArg("STOP_OPTION"))
+		visitAction(w, target, block, fieldArg("STOP_OPTION"))
 	case "flipperdisplay_centerButtonLight":
-		visitAction(w, target, block, "setCenterButtonLight", namedInputArg("COLOR"))
+		visitAction(w, target, block, namedInputArg("COLOR"))
 	case "flipperdisplay_color-selector-vertical":
 		visitFieldSelector(w, target, block, "field_flipperdisplay_color-selector-vertical")
 	case "flipperdisplay_custom-animate-matrix":
@@ -77,11 +77,11 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 	case "flipperdisplay_custom-matrix":
 		visitFieldSelector(w, target, block, "field_flipperdisplay_custom-matrix")
 	case "flipperdisplay_ledAnimation":
-		visitAction(w, target, block, "startAnimation", namedInputArg("MATRIX"))
+		visitAction(w, target, block, namedInputArg("MATRIX"))
 	case "flipperdisplay_ledImage":
-		visitAction(w, target, block, "turnOnPixels", namedInputArg("MATRIX"))
+		visitAction(w, target, block, namedInputArg("MATRIX"))
 	case "flipperdisplay_ledImageFor":
-		visitAction(w, target, block, "turnOnPixels", namedInputArg("MATRIX"), namedInputArg2("VALUE", "seconds"))
+		visitAction(w, target, block, namedInputArg("MATRIX"), namedInputArg2("VALUE", "seconds"))
 	case "flipperevents_force-sensor-selector":
 		visitFieldSelector(w, target, block, "field_flipperevents_force-sensor-selector")
 	case "flipperevents_whenPressed":
@@ -91,9 +91,9 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		fmt.Fprintln(w, "when program starts:")
 		w = indent(w)
 	case "flippermoremotor_motorSetDegreeCounted":
-		visitAction(w, target, block, "setRelativePosition", namedInputArg("PORT"), namedInputArg("VALUE"))
+		visitAction(w, target, block, namedInputArg("PORT"), namedInputArg("VALUE"))
 	case "flippermoremotor_motorTurnForSpeed":
-		visitAction(w, target, block, "runMotor", namedInputArg("PORT"), namedInputArg("SPEED"), fieldInputArg("UNIT", "VALUE"))
+		visitAction(w, target, block, namedInputArg("PORT"), namedInputArg("SPEED"), fieldInputArg("UNIT", "VALUE"))
 	case "flippermoremotor_multiple-port-selector":
 		visitFieldSelector(w, target, block, "field_flippermoremotor_multiple-port-selector")
 	case "flippermoremotor_position":
@@ -107,11 +107,11 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 	case "flippermotor_custom-icon-direction":
 		visitFieldSelector(w, target, block, "field_flippermotor_custom-icon-direction")
 	case "flippermotor_motorGoDirectionToPosition":
-		visitAction(w, target, block, "goToPosition", namedInputArg("PORT"), namedInputArg("POSITION"), namedFieldArg("DIRECTION"))
+		visitAction(w, target, block, namedInputArg("PORT"), namedInputArg("POSITION"), namedFieldArg("DIRECTION"))
 	case "flippermotor_motorSetSpeed":
-		visitAction(w, target, block, "setMotorSpeed", namedInputArg("PORT"), namedInputArg("SPEED"))
+		visitAction(w, target, block, namedInputArg("PORT"), namedInputArg("SPEED"))
 	case "flippermotor_motorStartDirection":
-		visitAction(w, target, block, "motorStart", namedInputArg("PORT"), namedInputArg("DIRECTION"))
+		visitAction(w, target, block, namedInputArg("PORT"), namedInputArg("DIRECTION"))
 	case "flippermotor_multiple-port-selector":
 		visitFieldSelector(w, target, block, "field_flippermotor_multiple-port-selector")
 	case "flippermotor_motorStop":
@@ -217,8 +217,22 @@ func visitProcedurePrototype(w io.Writer, target lmsp.ProjectTarget, block *lmsp
 
 type argFn func(io.Writer, lmsp.ProjectTarget, *lmsp.ProjectBlockObject)
 
-func visitAction(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject, action string, args ...argFn) {
-	fmt.Fprintf(w, "%s(", action)
+var opcodeActions = map[lmsp.ProjectOpcode]string{
+	"event_broadcast":                         "broadcast",
+	"flippercontrol_stop":                     "stop",
+	"flipperdisplay_centerButtonLight":        "setCenterButtonLight",
+	"flipperdisplay_ledAnimation":             "startAnimation",
+	"flipperdisplay_ledImage":                 "turnOnPixels",
+	"flipperdisplay_ledImageFor":              "turnOnPixels",
+	"flippermoremotor_motorSetDegreeCounted":  "setRelativePosition",
+	"flippermoremotor_motorTurnForSpeed":      "runMotor",
+	"flippermotor_motorGoDirectionToPosition": "goToPosition",
+	"flippermotor_motorSetSpeed":              "setMotorSpeed",
+	"flippermotor_motorStartDirection":        "motorStart",
+}
+
+func visitAction(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject, args ...argFn) {
+	fmt.Fprintf(w, "%s(", opcodeActions[block.Opcode])
 	for i, a := range args {
 		if i > 0 {
 			fmt.Fprint(w, ", ")
