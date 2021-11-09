@@ -3,6 +3,7 @@ package lmsdump
 import (
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/spraints/mind-meld/lmsp"
 )
@@ -209,66 +210,86 @@ func visitProcedurePrototype(w io.Writer, target lmsp.ProjectTarget, block *lmsp
 	// Inputs is redundant with argument names.
 }
 
+type argFn func(io.Writer, lmsp.ProjectTarget, *lmsp.ProjectBlockObject)
+
+func visitAction(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject, action string, args ...argFn) {
+	fmt.Fprintf(w, "%s(", action)
+	for i, a := range args {
+		if i > 0 {
+			fmt.Fprint(w, ", ")
+		}
+		a(w, target, block)
+	}
+	fmt.Fprintln(w, ")")
+}
+
+func fieldArg(fieldName lmsp.ProjectFieldName) argFn {
+	return func(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+		fmt.Fprint(w, getField(block, fieldName))
+	}
+}
+
+func namedFieldArg(fieldName lmsp.ProjectFieldName) argFn {
+	label := strings.ToLower(string(fieldName))
+	return func(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+		fmt.Fprintf(w, "%s: %v", label, getField(block, fieldName))
+	}
+}
+
+func namedInputArg(inputName lmsp.ProjectInputID) argFn {
+	return namedInputArg2(inputName, strings.ToLower(string(inputName)))
+}
+
+func namedInputArg2(inputName lmsp.ProjectInputID, label string) argFn {
+	return func(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+		fmt.Fprintf(w, "%s: ", label)
+		visitInput(w, target, block, inputName)
+	}
+}
+
+func fieldInputArg(fieldName lmsp.ProjectFieldName, inputName lmsp.ProjectInputID) argFn {
+	return func(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+		fmt.Fprintf(w, "%s: ", getField(block, fieldName))
+		visitInput(w, target, block, inputName)
+	}
+}
+
 func visitStop(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-	fmt.Fprintf(w, "stop(%s)\n", getField(block, "STOP_OPTION"))
+	visitAction(w, target, block, "stop", fieldArg("STOP_OPTION"))
 }
 
 func visitDisplayCenterButtonLight(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-	fmt.Fprint(w, "setCenterButtonLight(color: ")
-	visitInput(w, target, block, "COLOR")
-	fmt.Fprintln(w, ")")
+	visitAction(w, target, block, "setCenterButtonLight", namedInputArg("COLOR"))
 }
 
 func visitLEDAnimation(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-	fmt.Fprint(w, "displayLEDAnimation(matrix: ")
-	visitInput(w, target, block, "MATRIX")
-	fmt.Fprintln(w, ")")
+	visitAction(w, target, block, "startAnimation", namedInputArg("MATRIX"))
 }
 
 func visitLEDImage(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-	fmt.Fprint(w, "displayLEDImage(matrix: ")
-	visitInput(w, target, block, "MATRIX")
-	fmt.Fprintln(w, ")")
+	visitAction(w, target, block, "turnOnPixels", namedInputArg("MATRIX"))
 }
 
 func visitLEDImageFor(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-	fmt.Fprint(w, "displayLEDImage(matrix: ")
-	visitInput(w, target, block, "MATRIX")
-	fmt.Fprint(w, ", for: ")
-	visitInput(w, target, block, "VALUE")
-	fmt.Fprintln(w, ")")
+	visitAction(w, target, block, "turnOnPixels", namedInputArg("MATRIX"), namedInputArg2("VALUE", "seconds"))
 }
 
 func visitWhenPressed(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-	fmt.Fprint(w, "whenPressed(port: ")
+	fmt.Fprint(w, "[port ")
 	visitInput(w, target, block, "PORT")
-	fmt.Fprintf(w, ", is: %s):\n", getField(block, "OPTION"))
+	fmt.Fprintf(w, "] when %s:\n", getField(block, "OPTION"))
 }
 
 func visitMoreMotorSetDegreeCounted(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-	fmt.Fprint(w, "setDegreesCounted(port: ")
-	visitInput(w, target, block, "PORT")
-	fmt.Fprint(w, ", value: ")
-	visitInput(w, target, block, "VALUE")
-	fmt.Fprintln(w, ")")
+	visitAction(w, target, block, "setRelativePosition", namedInputArg("PORT"), namedInputArg("VALUE"))
 }
 
 func visitMotorTurnForSpeed(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-	fmt.Fprint(w, "motorTurnForSpeed(port: ")
-	visitInput(w, target, block, "PORT")
-	fmt.Fprint(w, ", speed: ")
-	visitInput(w, target, block, "SPEED")
-	fmt.Fprintf(w, ", %s: ", getField(block, "UNIT"))
-	visitInput(w, target, block, "VALUE")
-	fmt.Fprintln(w, ")")
+	visitAction(w, target, block, "runMotor", namedInputArg("PORT"), namedInputArg("SPEED"), fieldInputArg("UNIT", "VALUE"))
 }
 
 func visitMotorGoDirectionToPosition(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-	fmt.Fprint(w, "goToPosition(port: ")
-	visitInput(w, target, block, "PORT")
-	fmt.Fprint(w, ", position: ")
-	visitInput(w, target, block, "POSITION")
-	fmt.Fprintf(w, ", direction: %s)\n", getField(block, "DIRECTION"))
+	visitAction(w, target, block, "goToPosition", namedInputArg("PORT"), namedInputArg("POSITION"), namedFieldArg("DIRECTION"))
 }
 
 func visitMotorSetSpeed(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
