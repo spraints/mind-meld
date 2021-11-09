@@ -182,8 +182,14 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 	case "procedures_prototype":
 		renderProcedurePrototype(w, target, block)
 	default:
-		fmt.Fprintf(w, "!!!TODO\n  case %q:\n    visitXYZ(w, target, block)\n  %#v!!!\n", block.Opcode, block)
-		return
+		args := make([]argFn, 0, len(block.Inputs)+len(block.Fields))
+		for input := range block.Inputs {
+			args = append(args, namedInputArg(input))
+		}
+		for field := range block.Fields {
+			args = append(args, namedFieldArg(field))
+		}
+		renderAction(w, target, block, args...)
 	}
 	if block.Next != nil {
 		fmt.Fprintln(w) // TODO - move this to a 'renderX' func.
