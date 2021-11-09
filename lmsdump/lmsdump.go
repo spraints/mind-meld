@@ -13,13 +13,18 @@ func Dump(w io.Writer, proj lmsp.Project) error {
 		if _, err := fmt.Fprintf(w, "target: %s\n", target.Name); err != nil {
 			return err
 		}
-		// TODO check for errors in visitTarget.
-		visitTarget(indent(w), target)
+		// TODO check for errors in renderTarget.
+		renderTarget(indent(w), target)
 	}
 	return nil
 }
 
-func visitTarget(w io.Writer, target lmsp.ProjectTarget) {
+// It's not perfect, but here's more or less the layout below:
+// + visit* are the generic funcs for walking the data structure.
+//   - These will eventually be able to change from renderX(w,target,block) to w.visitBlock(target,block).
+// + render* are the visitor that writes pseudocode to a Writer.
+
+func renderTarget(w io.Writer, target lmsp.ProjectTarget) {
 	for _, id := range target.GetRootBlockIDs() {
 		fmt.Fprintf(w, "----- %s -----\n", id)
 		visitBlock(w, target, id)
@@ -27,7 +32,7 @@ func visitTarget(w io.Writer, target lmsp.ProjectTarget) {
 	}
 	first := true
 	for _, id := range target.GetStandaloneCommentIDs() {
-		visitComment(w, target, id)
+		renderComment(w, target, id)
 		if first {
 			fmt.Fprintln(w, "--------------------------------")
 			first = false
@@ -39,158 +44,158 @@ func visitTarget(w io.Writer, target lmsp.ProjectTarget) {
 func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) {
 	block := target.Blocks[id].(*lmsp.ProjectBlockObject)
 	if block.Comment != "" {
-		visitComment(w, target, block.Comment)
+		renderComment(w, target, block.Comment)
 	}
 	switch block.Opcode {
 	case "argument_reporter_string_number":
-		visitFieldSelector(w, target, block, "VALUE")
+		renderFieldSelector(w, target, block, "VALUE")
 	case "control_forever":
-		visitForever(w, target, block)
+		renderForever(w, target, block)
 	case "control_if":
-		visitControl(w, target, block, "if")
+		renderControl(w, target, block, "if")
 	case "control_if_else":
-		visitIfElse(w, target, block)
+		renderIfElse(w, target, block)
 	case "control_repeat_until":
-		visitControl(w, target, block, "until")
+		renderControl(w, target, block, "until")
 	case "control_wait_until":
-		visitWaitUntil(w, target, block)
+		renderWaitUntil(w, target, block)
 	case "control_wait":
-		visitWait(w, target, block)
+		renderWait(w, target, block)
 	case "data_changevariableby":
-		visitChangeVariableBy(w, target, block)
+		renderChangeVariableBy(w, target, block)
 	case "data_setvariableto":
-		visitSetVariableTo(w, target, block)
+		renderSetVariableTo(w, target, block)
 	case "event_broadcast":
-		visitAction(w, target, block, inputArg("BROADCAST_INPUT"))
+		renderAction(w, target, block, inputArg("BROADCAST_INPUT"))
 	case "event_whenbroadcastreceived":
-		visitWhenBroadcastReceived(w, target, block)
-		w = indent(w)
+		renderWhenBroadcastReceived(w, target, block)
+		w = indent(w) // TODO - move this to a renderX func.
 	case "flippercontrol_stop":
-		visitAction(w, target, block, fieldArg("STOP_OPTION"))
+		renderAction(w, target, block, fieldArg("STOP_OPTION"))
 	case "flipperdisplay_centerButtonLight":
-		visitAction(w, target, block, namedInputArg("COLOR"))
+		renderAction(w, target, block, namedInputArg("COLOR"))
 	case "flipperdisplay_color-selector-vertical":
-		visitFieldSelector(w, target, block, "field_flipperdisplay_color-selector-vertical")
+		renderFieldSelector(w, target, block, "field_flipperdisplay_color-selector-vertical")
 	case "flipperdisplay_custom-animate-matrix":
-		visitFieldSelector(w, target, block, "field_flipperdisplay_custom-animate-matrix")
+		renderFieldSelector(w, target, block, "field_flipperdisplay_custom-animate-matrix")
 	case "flipperdisplay_custom-matrix":
-		visitFieldSelector(w, target, block, "field_flipperdisplay_custom-matrix")
+		renderFieldSelector(w, target, block, "field_flipperdisplay_custom-matrix")
 	case "flipperdisplay_ledAnimation":
-		visitAction(w, target, block, namedInputArg("MATRIX"))
+		renderAction(w, target, block, namedInputArg("MATRIX"))
 	case "flipperdisplay_ledImage":
-		visitAction(w, target, block, namedInputArg("MATRIX"))
+		renderAction(w, target, block, namedInputArg("MATRIX"))
 	case "flipperdisplay_ledImageFor":
-		visitAction(w, target, block, namedInputArg("MATRIX"), namedInputArg("VALUE"))
+		renderAction(w, target, block, namedInputArg("MATRIX"), namedInputArg("VALUE"))
 	case "flipperevents_force-sensor-selector":
-		visitFieldSelector(w, target, block, "field_flipperevents_force-sensor-selector")
+		renderFieldSelector(w, target, block, "field_flipperevents_force-sensor-selector")
 	case "flipperevents_whenPressed":
-		visitWhenPressed(w, target, block)
-		w = indent(w)
+		renderWhenPressed(w, target, block)
+		w = indent(w) // TODO - move this to a renderX func.
 	case "flipperevents_whenProgramStarts":
-		fmt.Fprint(w, "when program starts:")
-		w = indent(w)
+		fmt.Fprint(w, "when program starts:") // TODO - move this to a renderX func.
+		w = indent(w)                         // TODO - move this to a renderX func.
 	case "flippermoremotor_motorSetDegreeCounted":
-		visitAction(w, target, block, namedInputArg("PORT"), namedInputArg("VALUE"))
+		renderAction(w, target, block, namedInputArg("PORT"), namedInputArg("VALUE"))
 	case "flippermoremotor_motorTurnForSpeed":
-		visitAction(w, target, block, namedInputArg("PORT"), namedInputArg("SPEED"), fieldInputArg("UNIT", "VALUE"))
+		renderAction(w, target, block, namedInputArg("PORT"), namedInputArg("SPEED"), fieldInputArg("UNIT", "VALUE"))
 	case "flippermoremotor_multiple-port-selector":
-		visitFieldSelector(w, target, block, "field_flippermoremotor_multiple-port-selector")
+		renderFieldSelector(w, target, block, "field_flippermoremotor_multiple-port-selector")
 	case "flippermoremotor_position":
-		visitMoreMotorPosition(w, target, block)
+		renderMoreMotorPosition(w, target, block)
 	case "flippermoremotor_single-motor-selector":
-		visitFieldSelector(w, target, block, "field_flippermoremotor_single-motor-selector")
+		renderFieldSelector(w, target, block, "field_flippermoremotor_single-motor-selector")
 	case "flippermotor_absolutePosition":
-		visitAction(w, target, block, namedInputArg("PORT"))
+		renderAction(w, target, block, namedInputArg("PORT"))
 	case "flippermotor_custom-angle":
-		visitFieldSelector(w, target, block, "field_flippermotor_custom-angle")
+		renderFieldSelector(w, target, block, "field_flippermotor_custom-angle")
 	case "flippermotor_custom-icon-direction":
-		visitFieldSelector(w, target, block, "field_flippermotor_custom-icon-direction")
+		renderFieldSelector(w, target, block, "field_flippermotor_custom-icon-direction")
 	case "flippermotor_motorGoDirectionToPosition":
-		visitAction(w, target, block, namedInputArg("PORT"), namedInputArg("POSITION"), namedFieldArg("DIRECTION"))
+		renderAction(w, target, block, namedInputArg("PORT"), namedInputArg("POSITION"), namedFieldArg("DIRECTION"))
 	case "flippermotor_motorSetSpeed":
-		visitAction(w, target, block, namedInputArg("PORT"), namedInputArg("SPEED"))
+		renderAction(w, target, block, namedInputArg("PORT"), namedInputArg("SPEED"))
 	case "flippermotor_motorStartDirection":
-		visitAction(w, target, block, namedInputArg("PORT"), namedInputArg("DIRECTION"))
+		renderAction(w, target, block, namedInputArg("PORT"), namedInputArg("DIRECTION"))
 	case "flippermotor_multiple-port-selector":
-		visitFieldSelector(w, target, block, "field_flippermotor_multiple-port-selector")
+		renderFieldSelector(w, target, block, "field_flippermotor_multiple-port-selector")
 	case "flippermotor_motorStop":
-		visitAction(w, target, block, namedInputArg("PORT"))
+		renderAction(w, target, block, namedInputArg("PORT"))
 	case "flippermotor_motorTurnForDirection":
-		visitAction(w, target, block, namedInputArg("PORT"), namedInputArg("DIRECTION"), fieldInputArg("UNIT", "VALUE"))
+		renderAction(w, target, block, namedInputArg("PORT"), namedInputArg("DIRECTION"), fieldInputArg("UNIT", "VALUE"))
 	case "flippermotor_single-motor-selector":
-		visitFieldSelector(w, target, block, "field_flippermotor_single-motor-selector")
+		renderFieldSelector(w, target, block, "field_flippermotor_single-motor-selector")
 	case "flippermotor_speed":
-		visitAction(w, target, block, namedInputArg("PORT"))
+		renderAction(w, target, block, namedInputArg("PORT"))
 	case "flippermove_custom-icon-direction":
-		visitFieldSelector(w, target, block, "field_flippermove_custom-icon-direction")
+		renderFieldSelector(w, target, block, "field_flippermove_custom-icon-direction")
 	case "flippermove_move":
-		visitMove(w, target, block)
+		renderMove(w, target, block)
 	case "flippermove_movementSpeed":
-		visitMovementSpeed(w, target, block)
+		renderMovementSpeed(w, target, block)
 	case "flippermove_movement-port-selector":
-		visitFieldSelector(w, target, block, "field_flippermove_movement-port-selector")
+		renderFieldSelector(w, target, block, "field_flippermove_movement-port-selector")
 	case "flippermove_rotation-wheel":
-		visitFieldSelector(w, target, block, "field_flippermove_rotation-wheel")
+		renderFieldSelector(w, target, block, "field_flippermove_rotation-wheel")
 	case "flippermove_setMovementPair":
-		visitSetMovementPair(w, target, block)
+		renderSetMovementPair(w, target, block)
 	case "flippermove_startSteer":
-		visitMoveStartSteer(w, target, block)
+		renderMoveStartSteer(w, target, block)
 	case "flippermove_steer":
-		visitMoveSteer(w, target, block)
+		renderMoveSteer(w, target, block)
 	case "flippermove_stopMove":
-		visitMoveStopMove(w, target, block)
+		renderMoveStopMove(w, target, block)
 	case "flippersensors_color-sensor-selector":
-		visitFieldSelector(w, target, block, "field_flippersensors_color-sensor-selector")
+		renderFieldSelector(w, target, block, "field_flippersensors_color-sensor-selector")
 	case "flippersensors_isReflectivity":
-		visitIsReflectivity(w, target, block)
+		renderIsReflectivity(w, target, block)
 	case "flippersensors_orientationAxis":
-		visitOrientationAxis(w, target, block)
+		renderOrientationAxis(w, target, block)
 	case "flippersensors_resetYaw":
-		fmt.Fprint(w, "resetYaw()")
+		fmt.Fprint(w, "resetYaw()") // TODO - move this to a renderX func.
 	case "flippersound_beep":
-		visitPlayBeep(w, target, block)
+		renderPlayBeep(w, target, block)
 	case "flippersound_custom-piano":
-		visitFieldSelector(w, target, block, "field_flippersound_custom-piano")
+		renderFieldSelector(w, target, block, "field_flippersound_custom-piano")
 	case "flippersound_playSound":
-		visitPlaySound(w, target, block)
+		renderPlaySound(w, target, block)
 	case "flippersound_sound-selector":
-		visitFieldSelector(w, target, block, "field_flippersound_sound-selector")
+		renderFieldSelector(w, target, block, "field_flippersound_sound-selector")
 	case "flippersound_stopSound":
-		fmt.Fprint(w, "stopSound()")
+		fmt.Fprint(w, "stopSound()") // TODO - move this to a renderX func.
 	case "operator_add":
-		visitBinaryOperator(w, target, block, "+", "NUM1", "NUM2")
+		renderBinaryOperator(w, target, block, "+", "NUM1", "NUM2")
 	case "operator_equals":
-		visitBinaryOperator(w, target, block, "==", "OPERAND1", "OPERAND2")
+		renderBinaryOperator(w, target, block, "==", "OPERAND1", "OPERAND2")
 	case "operator_gt":
-		visitBinaryOperator(w, target, block, ">", "OPERAND1", "OPERAND2")
+		renderBinaryOperator(w, target, block, ">", "OPERAND1", "OPERAND2")
 	case "operator_lt":
-		visitBinaryOperator(w, target, block, "<", "OPERAND1", "OPERAND2")
+		renderBinaryOperator(w, target, block, "<", "OPERAND1", "OPERAND2")
 	case "operator_multiply":
-		visitBinaryOperator(w, target, block, "*", "NUM1", "NUM2")
+		renderBinaryOperator(w, target, block, "*", "NUM1", "NUM2")
 	case "operator_subtract":
-		visitBinaryOperator(w, target, block, "-", "NUM1", "NUM2")
+		renderBinaryOperator(w, target, block, "-", "NUM1", "NUM2")
 	case "procedures_call":
-		visitProcedureCall(w, target, block)
+		renderProcedureCall(w, target, block)
 	case "procedures_definition":
-		visitProcedureDefinition(w, target, block)
-		w = indent(w)
+		renderProcedureDefinition(w, target, block)
+		w = indent(w) // TODO - move this to a 'renderX' func.
 	case "procedures_prototype":
-		visitProcedurePrototype(w, target, block)
+		renderProcedurePrototype(w, target, block)
 	default:
 		fmt.Fprintf(w, "!!!TODO\n  case %q:\n    visitXYZ(w, target, block)\n  %#v!!!\n", block.Opcode, block)
 		return
 	}
 	if block.Next != nil {
-		fmt.Fprintln(w)
+		fmt.Fprintln(w) // TODO - move this to a 'renderX' func.
 		visitBlock(w, target, *block.Next)
 	}
 }
 
-func visitComment(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectCommentID) {
+func renderComment(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectCommentID) {
 	fmt.Fprintf(w, "/****\n  %s\n****/\n", target.Comments[id].Text)
 }
 
-func visitProcedureCall(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+func renderProcedureCall(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprintf(w, "%s %s(", block.Mutation.ProcCode, block.Mutation.ArgumentIDs)
 	inputs := block.Inputs
 	first := true
@@ -205,18 +210,20 @@ func visitProcedureCall(w io.Writer, target lmsp.ProjectTarget, block *lmsp.Proj
 	fmt.Fprintf(w, ")")
 }
 
-func visitProcedureDefinition(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+func renderProcedureDefinition(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprint(w, "def ")
 	visitInput(w, target, block, "custom_block")
 }
 
-func visitProcedurePrototype(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+func renderProcedurePrototype(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprintf(w, "%s %s", block.Mutation.ProcCode, block.Mutation.ArgumentNames)
 	// Inputs is redundant with argument names.
 }
 
+// This goes with the visit* funcs.
 type argFn func(io.Writer, lmsp.ProjectTarget, *lmsp.ProjectBlockObject)
 
+// This goes with the render* funcs.
 var opcodeActions = map[lmsp.ProjectOpcode]string{
 	"event_broadcast":                         "broadcast",
 	"flippercontrol_stop":                     "stop",
@@ -235,9 +242,9 @@ var opcodeActions = map[lmsp.ProjectOpcode]string{
 	"flippermotor_speed":                      "motorSpeed",
 }
 
-// visitAction visits a block that is like a function call. These may be script
+// renderAction visits a block that is like a function call. These may be script
 // blocks, input blocks, or boolean blocks.
-func visitAction(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject, args ...argFn) {
+func renderAction(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject, args ...argFn) {
 	label, ok := opcodeActions[block.Opcode]
 	if !ok {
 		label = string(block.Opcode)
@@ -252,12 +259,14 @@ func visitAction(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBloc
 	fmt.Fprint(w, ")")
 }
 
+// This goes with the render* funcs.
 func fieldArg(fieldName lmsp.ProjectFieldName) argFn {
 	return func(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 		fmt.Fprint(w, getField(block, fieldName))
 	}
 }
 
+// This goes with the render* funcs.
 func namedFieldArg(fieldName lmsp.ProjectFieldName) argFn {
 	label := strings.ToLower(string(fieldName))
 	return func(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
@@ -265,18 +274,21 @@ func namedFieldArg(fieldName lmsp.ProjectFieldName) argFn {
 	}
 }
 
+// This goes with the render* funcs.
 func inputArg(inputName lmsp.ProjectInputID) argFn {
 	return func(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 		visitInput(w, target, block, inputName)
 	}
 }
 
+// This goes with the render* funcs.
 var inputLabelOverrides = map[lmsp.ProjectOpcode]map[lmsp.ProjectInputID]string{
 	"flipperdisplay_ledImageFor": {
 		"VALUE": "seconds",
 	},
 }
 
+// This goes with the render* funcs.
 func namedInputArg(inputName lmsp.ProjectInputID) argFn {
 	return func(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 		label := inputLabel(block.Opcode, inputName)
@@ -285,6 +297,7 @@ func namedInputArg(inputName lmsp.ProjectInputID) argFn {
 	}
 }
 
+// This goes with the render* funcs.
 func inputLabel(opcode lmsp.ProjectOpcode, input lmsp.ProjectInputID) string {
 	opcodeOverrides := inputLabelOverrides[opcode]
 	if opcodeOverrides != nil {
@@ -295,6 +308,7 @@ func inputLabel(opcode lmsp.ProjectOpcode, input lmsp.ProjectInputID) string {
 	return strings.ToLower(string(input))
 }
 
+// This goes with the render* funcs.
 func fieldInputArg(fieldName lmsp.ProjectFieldName, inputName lmsp.ProjectInputID) argFn {
 	return func(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 		fmt.Fprintf(w, "%s: ", getField(block, fieldName))
@@ -302,17 +316,18 @@ func fieldInputArg(fieldName lmsp.ProjectFieldName, inputName lmsp.ProjectInputI
 	}
 }
 
-func visitWhenBroadcastReceived(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+func renderWhenBroadcastReceived(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprintf(w, "when I receive %q:", getField(block, "BROADCAST_OPTION"))
 }
 
-func visitWhenPressed(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+func renderWhenPressed(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprint(w, "[port ")
 	visitInput(w, target, block, "PORT")
 	fmt.Fprintf(w, "] when %s:", getField(block, "OPTION"))
 }
 
-func visitMove(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+// XXX
+func renderMove(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprint(w, "move(direction: ")
 	visitInput(w, target, block, "DIRECTION")
 	fmt.Fprintf(w, ", %s: ", getField(block, "UNIT"))
@@ -320,41 +335,40 @@ func visitMove(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockO
 	fmt.Fprint(w, ")")
 }
 
-func visitMovementSpeed(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+// XXX
+func renderMovementSpeed(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprint(w, "setMovementSpeed(speed: ")
 	visitInput(w, target, block, "SPEED")
 	fmt.Fprint(w, ")")
 }
 
-func visitFieldSelector(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject, field lmsp.ProjectFieldName) {
+func renderFieldSelector(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject, field lmsp.ProjectFieldName) {
 	fmt.Fprint(w, getField(block, field))
 }
 
-func visitMoreMotorPosition(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+// XXX
+func renderMoreMotorPosition(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprint(w, "motorPosition(port: ")
 	visitInput(w, target, block, "PORT")
 	fmt.Fprint(w, ")")
 }
 
-func visitMotorAbsolutePosition(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-	fmt.Fprint(w, "motorAbsolutePosition(port: ")
-	visitInput(w, target, block, "PORT")
-	fmt.Fprint(w, ")")
-}
-
-func visitSetMovementPair(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+// XXX
+func renderSetMovementPair(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprint(w, "setMovementPair(")
 	visitInput(w, target, block, "PAIR")
 	fmt.Fprint(w, ")")
 }
 
-func visitMoveStartSteer(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+// XXX
+func renderMoveStartSteer(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprint(w, "startMoveSteer(steering: ")
 	visitInput(w, target, block, "STEERING")
 	fmt.Fprint(w, ")")
 }
 
-func visitMoveSteer(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+// XXX
+func renderMoveSteer(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprint(w, "moveSteer(steering: ")
 	visitInput(w, target, block, "STEERING")
 	fmt.Fprintf(w, ", %s: ", getField(block, "UNIT"))
@@ -362,27 +376,32 @@ func visitMoveSteer(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectB
 	fmt.Fprint(w, ")")
 }
 
-func visitMoveStopMove(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+// XXX
+func renderMoveStopMove(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprint(w, "stopMove()")
 }
 
-func visitOrientationAxis(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+// XXX
+func renderOrientationAxis(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprintf(w, "orientation(%s)", getField(block, "AXIS"))
 }
 
-func visitPlayBeep(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+// XXX
+func renderPlayBeep(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprint(w, "beep(note: ")
 	visitInput(w, target, block, "NOTE")
 	fmt.Fprint(w, ")")
 }
 
-func visitPlaySound(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+// XXX
+func renderPlaySound(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprint(w, "playSound(sound: ")
 	visitInput(w, target, block, "SOUND")
 	fmt.Fprint(w, ")")
 }
 
-func visitIsReflectivity(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+// XXX
+func renderIsReflectivity(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprint(w, "(reflectivity(port: ")
 	visitInput(w, target, block, "PORT")
 	fmt.Fprintf(w, ") %s ", getField(block, "COMPARATOR"))
@@ -390,50 +409,51 @@ func visitIsReflectivity(w io.Writer, target lmsp.ProjectTarget, block *lmsp.Pro
 	fmt.Fprint(w, ")")
 }
 
-func visitForever(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+func renderForever(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprint(w, "forever:")
 	visitInput(indent(w), target, block, "SUBSTACK")
 }
 
-func visitControl(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject, keyword string) {
+func renderControl(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject, keyword string) {
 	fmt.Fprintf(w, "%s ", keyword)
 	visitInput(w, target, block, "CONDITION")
 	fmt.Fprint(w, ":")
 	visitInput(indent(w), target, block, "SUBSTACK")
 }
 
-func visitIfElse(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-	visitControl(w, target, block, "if")
+func renderIfElse(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	renderControl(w, target, block, "if")
 	fmt.Fprint(w, "else:")
 	visitInput(indent(w), target, block, "SUBSTACK2")
 }
 
-func visitWaitUntil(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+func renderWaitUntil(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprint(w, "wait until: ")
 	visitInput(w, target, block, "CONDITION")
 	fmt.Fprint(w)
 }
 
-func visitWait(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+func renderWait(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprint(w, "wait(duration: ")
 	visitInput(w, target, block, "DURATION")
 	fmt.Fprint(w, ")")
 }
 
-func visitChangeVariableBy(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+func renderChangeVariableBy(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	f := getField(block, "VARIABLE")
 	fmt.Fprintf(w, "[variable %s] = [variable %s] + ", f, f)
 	visitInput(w, target, block, "VALUE")
 	fmt.Fprint(w)
 }
 
-func visitSetVariableTo(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+func renderSetVariableTo(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprintf(w, "[variable %s] = ", getField(block, "VARIABLE"))
 	visitInput(w, target, block, "VALUE")
 	fmt.Fprint(w)
 }
 
-func visitBinaryOperator(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject, op string, arg1, arg2 lmsp.ProjectInputID) {
+// TODO - make 'op' a lookup
+func renderBinaryOperator(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject, op string, arg1, arg2 lmsp.ProjectInputID) {
 	fmt.Fprint(w, "(")
 	visitInput(w, target, block, arg1)
 	fmt.Fprintf(w, " %s ", op)
@@ -454,21 +474,22 @@ func visitInput(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlock
 		v := val[1].(string)
 		switch id {
 		case 4, 5, 6, 7, 8, 9:
-			fmt.Fprint(w, v)
+			fmt.Fprint(w, v) // TODO - move this to a render* func
 		case 10:
-			fmt.Fprintf(w, "%q", v)
+			fmt.Fprintf(w, "%q", v) // TODO - move this to a render* func
 		case 11:
-			fmt.Fprintf(w, "[broadcast %q]", v)
+			fmt.Fprintf(w, "[broadcast %q]", v) // TODO - move this to a render* func
 		case 12:
-			fmt.Fprintf(w, "[variable %s]", v)
+			fmt.Fprintf(w, "[variable %s]", v) // TODO - move this to a render* func
 		case 13:
-			fmt.Fprintf(w, "[list %q]", v)
+			fmt.Fprintf(w, "[list %q]", v) // TODO - move this to a render* func
 		default:
-			fmt.Fprintf(w, "???%#v???", val)
+			fmt.Fprintf(w, "???%#v???", val) // TODO - move this to a render* func
 		}
 	}
 }
 
+// This goes with the visit* funcs.
 func getField(block *lmsp.ProjectBlockObject, name lmsp.ProjectFieldName) string {
 	field := block.Fields[name].([]interface{})
 	// field[0] could be a string, float64, maybe others?
