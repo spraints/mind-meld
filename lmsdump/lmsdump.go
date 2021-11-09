@@ -115,9 +115,9 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 	case "flippermotor_multiple-port-selector":
 		visitFieldSelector(w, target, block, "field_flippermotor_multiple-port-selector")
 	case "flippermotor_motorStop":
-		visitMotorStop(w, target, block)
+		visitAction(w, target, block, namedInputArg("PORT"))
 	case "flippermotor_motorTurnForDirection":
-		visitMotorTurnForDirection(w, target, block)
+		visitAction(w, target, block, namedInputArg("PORT"), namedInputArg("DIRECTION"), fieldInputArg("UNIT", "VALUE"))
 	case "flippermotor_single-motor-selector":
 		visitFieldSelector(w, target, block, "field_flippermotor_single-motor-selector")
 	case "flippermotor_speed":
@@ -229,10 +229,16 @@ var opcodeActions = map[lmsp.ProjectOpcode]string{
 	"flippermotor_motorGoDirectionToPosition": "goToPosition",
 	"flippermotor_motorSetSpeed":              "setMotorSpeed",
 	"flippermotor_motorStartDirection":        "motorStart",
+	"flippermotor_motorStop":                  "stopMotor",
+	"flippermotor_motorTurnForDirection":      "run",
 }
 
 func visitAction(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject, args ...argFn) {
-	fmt.Fprintf(w, "%s(", opcodeActions[block.Opcode])
+	label, ok := opcodeActions[block.Opcode]
+	if !ok {
+		label = string(block.Opcode)
+	}
+	fmt.Fprintf(w, "%s(", label)
 	for i, a := range args {
 		if i > 0 {
 			fmt.Fprint(w, ", ")
@@ -300,22 +306,6 @@ func visitWhenPressed(w io.Writer, target lmsp.ProjectTarget, block *lmsp.Projec
 	fmt.Fprint(w, "[port ")
 	visitInput(w, target, block, "PORT")
 	fmt.Fprintf(w, "] when %s:\n", getField(block, "OPTION"))
-}
-
-func visitMotorStop(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-	fmt.Fprint(w, "stopMotor(port: ")
-	visitInput(w, target, block, "PORT")
-	fmt.Fprintln(w, ")")
-}
-
-func visitMotorTurnForDirection(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-	fmt.Fprint(w, "motorTurnForDirection(direction: ")
-	visitInput(w, target, block, "DIRECTION")
-	fmt.Fprint(w, ", port: ")
-	visitInput(w, target, block, "PORT")
-	fmt.Fprintf(w, ", %s: ", getField(block, "UNIT"))
-	visitInput(w, target, block, "VALUE")
-	fmt.Fprintln(w, ")")
 }
 
 func visitMotorSpeed(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
