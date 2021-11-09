@@ -21,7 +21,9 @@ func Dump(w io.Writer, proj lmsp.Project) error {
 func visitTarget(w io.Writer, target lmsp.ProjectTarget) {
 	for _, id := range target.GetRootBlockIDs() {
 		fmt.Fprintf(w, "----- %s -----\n", id)
-		visitBlock(w, target, id)
+		fw := finishWithNewline(w)
+		visitBlock(fw, target, id)
+		fw.Finish()
 	}
 	first := true
 	for _, id := range target.GetStandaloneCommentIDs() {
