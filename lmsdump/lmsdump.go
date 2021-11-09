@@ -109,9 +109,9 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 	case "flippermotor_motorGoDirectionToPosition":
 		visitAction(w, target, block, "goToPosition", namedInputArg("PORT"), namedInputArg("POSITION"), namedFieldArg("DIRECTION"))
 	case "flippermotor_motorSetSpeed":
-		visitMotorSetSpeed(w, target, block)
+		visitAction(w, target, block, "setMotorSpeed", namedInputArg("PORT"), namedInputArg("SPEED"))
 	case "flippermotor_motorStartDirection":
-		visitMotorStartDirection(w, target, block)
+		visitAction(w, target, block, "motorStart", namedInputArg("PORT"), namedInputArg("DIRECTION"))
 	case "flippermotor_multiple-port-selector":
 		visitFieldSelector(w, target, block, "field_flippermotor_multiple-port-selector")
 	case "flippermotor_motorStop":
@@ -273,22 +273,6 @@ func visitWhenPressed(w io.Writer, target lmsp.ProjectTarget, block *lmsp.Projec
 	fmt.Fprint(w, "[port ")
 	visitInput(w, target, block, "PORT")
 	fmt.Fprintf(w, "] when %s:\n", getField(block, "OPTION"))
-}
-
-func visitMotorSetSpeed(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-	fmt.Fprint(w, "setMotorSpeed(port: ")
-	visitInput(w, target, block, "PORT")
-	fmt.Fprint(w, ", speed: ")
-	visitInput(w, target, block, "SPEED")
-	fmt.Fprintln(w, ")")
-}
-
-func visitMotorStartDirection(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-	fmt.Fprint(w, "motorStartDirection(direction: ")
-	visitInput(w, target, block, "DIRECTION")
-	fmt.Fprint(w, ", port: ")
-	visitInput(w, target, block, "PORT")
-	fmt.Fprintln(w, ")")
 }
 
 func visitMotorStop(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
