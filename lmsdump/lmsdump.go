@@ -81,7 +81,7 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 	case "flipperdisplay_ledImage":
 		visitAction(w, target, block, namedInputArg("MATRIX"))
 	case "flipperdisplay_ledImageFor":
-		visitAction(w, target, block, namedInputArg("MATRIX"), namedInputArg2("VALUE", "seconds"))
+		visitAction(w, target, block, namedInputArg("MATRIX"), namedInputArg("VALUE"))
 	case "flipperevents_force-sensor-selector":
 		visitFieldSelector(w, target, block, "field_flipperevents_force-sensor-selector")
 	case "flipperevents_whenPressed":
@@ -261,15 +261,28 @@ func inputArg(inputName lmsp.ProjectInputID) argFn {
 	}
 }
 
-func namedInputArg(inputName lmsp.ProjectInputID) argFn {
-	return namedInputArg2(inputName, strings.ToLower(string(inputName)))
+var inputLabelOverrides = map[lmsp.ProjectOpcode]map[lmsp.ProjectInputID]string{
+	"flipperdisplay_ledImageFor": {
+		"VALUE": "seconds",
+	},
 }
 
-func namedInputArg2(inputName lmsp.ProjectInputID, label string) argFn {
+func namedInputArg(inputName lmsp.ProjectInputID) argFn {
 	return func(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+		label := inputLabel(block.Opcode, inputName)
 		fmt.Fprintf(w, "%s: ", label)
 		visitInput(w, target, block, inputName)
 	}
+}
+
+func inputLabel(opcode lmsp.ProjectOpcode, input lmsp.ProjectInputID) string {
+	opcodeOverrides := inputLabelOverrides[opcode]
+	if opcodeOverrides != nil {
+		if label, ok := opcodeOverrides[input]; ok {
+			return label
+		}
+	}
+	return strings.ToLower(string(input))
 }
 
 func fieldInputArg(fieldName lmsp.ProjectFieldName, inputName lmsp.ProjectInputID) argFn {
