@@ -13,9 +13,9 @@ import (
 )
 
 func main() {
-	if len(os.Args) == 1 {
-		finish(ui.Run())
-		return
+	if len(os.Args) < 2 {
+		fmt.Printf("Usage: %s [dump FILE | browse]\n", os.Args[0])
+		os.Exit(1)
 	}
 
 	switch os.Args[1] {
@@ -29,6 +29,8 @@ func main() {
 		finish(githooks.RunPreCommit(mode))
 	case "dump":
 		finish(dump(os.Args[2]))
+	case "browse":
+		finish(ui.Run())
 	default:
 		fmt.Printf("Usage: %s [dump FILE]\n", os.Args[0])
 		os.Exit(1)

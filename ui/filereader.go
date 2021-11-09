@@ -1,13 +1,13 @@
 package ui
 
 import (
-	"fmt"
-	"io/ioutil"
+	"bytes"
 	"path/filepath"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 
+	"github.com/spraints/mind-meld/lmsdump"
 	"github.com/spraints/mind-meld/lmsp/lmspsimple"
 )
 
@@ -20,6 +20,7 @@ type fileReader struct {
 	path      string
 	readError error
 	data      *lmspsimple.File
+	dumpLines []string
 	pos       int
 }
 
@@ -28,8 +29,17 @@ func (f fileReader) read() tea.Msg {
 	if err != nil {
 		return err
 	}
-	ioutil.WriteFile("project.json", programs.Raw, 0644)
-	return programs
+	//ioutil.WriteFile("project.json", programs.Raw, 0644)
+
+	f.data = programs
+
+	var dumped bytes.Buffer
+	if err := lmsdump.Dump(&dumped, programs.Project); err != nil {
+		return err
+	}
+	f.dumpLines = strings.Split(dumped.String(), "\n")
+
+	return f
 }
 
 func (f fileReader) Init() tea.Cmd {
@@ -40,12 +50,12 @@ func (f fileReader) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case error:
 		f.readError = msg
-	case *lmspsimple.File:
-		f.data = msg
+	case fileReader:
+		f = msg
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "down":
-			if f.pos+1 < len(f.data.Project.Targets) {
+			if f.pos+1 < len(f.dumpLines) {
 				f.pos++
 			}
 			return f, nil
@@ -58,9 +68,6 @@ func (f fileReader) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return f, tea.Quit
 		case "ctrl+h", "left":
 			return chdir(filepath.Dir(f.path))
-		case "enter":
-			t := targetRender{file: f, target: f.data.Project.Targets[f.pos]}
-			return t, t.index
 		}
 	}
 	return f, nil
@@ -74,14 +81,20 @@ func (f fileReader) View() string {
 	if f.data == nil {
 		return start + loading
 	}
-	lines := make([]string, 0, 1+len(f.data.Project.Targets))
-	lines = append(lines, start)
-	for i, target := range f.data.Project.Targets {
-		if i == f.pos {
-			lines = append(lines, fmt.Sprintf("> %s >\n", target.Name))
-		} else {
-			lines = append(lines, fmt.Sprintf("  %s\n", target.Name))
-		}
+	if f.pos == 0 {
+		start += "\n"
+	} else {
+		start += "--^^ more ^^--\n"
 	}
-	return strings.Join(lines, "")
+	lines := f.dumpLines[f.pos:]
+	if len(lines) > 20 {
+		lines = lines[:20]
+	}
+	start += strings.Join(lines, "\n")
+	if f.pos >= len(f.dumpLines)-20 {
+		start += "\n\n"
+	} else {
+		start += "\n--vv more vv--\n"
+	}
+	return start
 }
