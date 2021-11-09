@@ -61,6 +61,11 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		visitChangeVariableBy(w, target, block)
 	case "data_setvariableto":
 		visitSetVariableTo(w, target, block)
+	case "event_broadcast":
+		visitAction(w, target, block, "broadcast", inputArg("BROADCAST_INPUT"))
+	case "event_whenbroadcastreceived":
+		visitWhenBroadcastReceived(w, target, block)
+		w = indent(w)
 	case "flippercontrol_stop":
 		visitStop(w, target, block)
 	case "flipperdisplay_centerButtonLight":
@@ -236,6 +241,12 @@ func namedFieldArg(fieldName lmsp.ProjectFieldName) argFn {
 	}
 }
 
+func inputArg(inputName lmsp.ProjectInputID) argFn {
+	return func(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+		visitInput(w, target, block, inputName)
+	}
+}
+
 func namedInputArg(inputName lmsp.ProjectInputID) argFn {
 	return namedInputArg2(inputName, strings.ToLower(string(inputName)))
 }
@@ -272,6 +283,10 @@ func visitLEDImage(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBl
 
 func visitLEDImageFor(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	visitAction(w, target, block, "turnOnPixels", namedInputArg("MATRIX"), namedInputArg2("VALUE", "seconds"))
+}
+
+func visitWhenBroadcastReceived(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	fmt.Fprintf(w, "when I receive %q:\n", getField(block, "BROADCAST_OPTION"))
 }
 
 func visitWhenPressed(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
