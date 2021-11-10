@@ -3,6 +3,7 @@ package lmsdump
 import (
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 
 	"github.com/spraints/mind-meld/lmsp"
@@ -182,19 +183,32 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 	case "procedures_prototype":
 		renderProcedurePrototype(w, target, block)
 	default:
-		args := make([]argFn, 0, len(block.Inputs)+len(block.Fields))
-		for input := range block.Inputs {
-			args = append(args, namedInputArg(input))
-		}
-		for field := range block.Fields {
-			args = append(args, namedFieldArg(field))
-		}
-		renderAction(w, target, block, args...)
+		visitUnknown(w, target, block)
 	}
 	if block.Next != nil {
 		fmt.Fprintln(w) // TODO - move this to a 'renderX' func.
 		visitBlock(w, target, *block.Next)
 	}
+}
+
+func visitUnknown(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	type sortableArg struct {
+		name string
+		a    argFn
+	}
+	argSorter := make([]sortableArg, 0, len(block.Inputs)+len(block.Fields))
+	for input := range block.Inputs {
+		argSorter = append(argSorter, sortableArg{string(input), namedInputArg(input)})
+	}
+	for field := range block.Fields {
+		argSorter = append(argSorter, sortableArg{string(field), namedFieldArg(field)})
+	}
+	sort.Slice(argSorter, func(i, j int) bool { return argSorter[i].name < argSorter[j].name })
+	args := make([]argFn, 0, len(argSorter))
+	for _, sa := range argSorter {
+		args = append(args, sa.a)
+	}
+	renderAction(w, target, block, args...)
 }
 
 func renderComment(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectCommentID) {
