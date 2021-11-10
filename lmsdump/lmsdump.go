@@ -67,21 +67,32 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		renderFieldSelector(w, target, block, "VALUE")
 	case "flipperdisplay_color-selector-vertical",
 		"flipperdisplay_custom-animate-matrix",
+		"flipperdisplay_custom-icon-direction",
 		"flipperdisplay_custom-matrix",
+		"flipperdisplay_distance-sensor-selector",
+		"flipperdisplay_led-selector",
+		"flipperevents_color-selector",
+		"flipperevents_color-sensor-selector",
+		"flipperevents_distance-sensor-selector",
 		"flipperevents_force-sensor-selector",
 		"flippermoremotor_multiple-port-selector",
 		"flippermoremotor_single-motor-selector",
+		"flippermoremove_rotation-wheel",
+		"flippermoresensors_color-sensor-selector",
 		"flippermoresensors_force-sensor-selector",
 		"flippermotor_custom-angle",
+		"flippermotor_custom-icon-direction",
 		"flippermotor_multiple-port-selector",
 		"flippermotor_single-motor-selector",
-		"flippermotor_custom-icon-direction",
 		"flippermove_custom-icon-direction",
 		"flippermove_movement-port-selector",
 		"flippermove_rotation-wheel",
+		"flippersensors_color-selector",
 		"flippersensors_color-sensor-selector",
+		"flippersensors_distance-sensor-selector",
 		"flippersound_custom-piano",
-		"flippersound_sound-selector":
+		"flippersound_sound-selector",
+		"radiobroadcast_broadcast-signal":
 		renderFieldSelector(w, target, block, lmsp.ProjectFieldName("field_"+block.Opcode))
 
 	case "control_forever":
