@@ -49,7 +49,18 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		renderComment(w, target, block.Comment)
 	}
 	switch block.Opcode {
-	case "flippermove_stopMove", "flippersensors_resetYaw", "flippersound_stopSound":
+	case "flippercontrol_stopOtherStacks",
+		"flipperdisplay_displayOff",
+		"flippermoremove_moveDidMovement",
+		"flippermove_stopMove",
+		"flippersensors_motion",
+		"flippersensors_orientation",
+		"flippersensors_resetTimer",
+		"flippersensors_resetYaw",
+		"flippersensors_timer",
+		"flippersound_stopSound",
+		"sound_cleareffects",
+		"sound_volume":
 		renderAction(w, target, block)
 
 	case "argument_reporter_string_number":
@@ -99,6 +110,8 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 	case "flipperevents_whenProgramStarts":
 		renderWhenProgramStarts(w, target, block)
 		w = indent(w) // TODO - move this to a renderX func.
+	case "flippermoremotor_motorDidMovement":
+		renderAction(w, target, block, namedInputArg("PORT"))
 	case "flippermoremotor_motorSetDegreeCounted":
 		renderAction(w, target, block, namedInputArg("PORT"), namedInputArg("VALUE"))
 	case "flippermoremotor_motorTurnForSpeed":
@@ -109,6 +122,10 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		renderAction(w, target, block, namedInputArg("PORT"))
 	case "flippermoremotor_single-motor-selector":
 		renderFieldSelector(w, target, block, "field_flippermoremotor_single-motor-selector")
+	case "flippermoresensors_force-sensor-selector":
+		renderFieldSelector(w, target, block, "field_flippermoresensors_force-sensor-selector")
+	case "flippermoresensors_isPressed":
+		renderAction(w, target, block, namedInputArg("PORT"), namedFieldArg("OPTION"))
 	case "flippermotor_absolutePosition":
 		renderAction(w, target, block, namedInputArg("PORT"))
 	case "flippermotor_custom-angle":
@@ -121,12 +138,12 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		renderAction(w, target, block, namedInputArg("PORT"), namedInputArg("SPEED"))
 	case "flippermotor_motorStartDirection":
 		renderAction(w, target, block, namedInputArg("PORT"), namedInputArg("DIRECTION"))
-	case "flippermotor_multiple-port-selector":
-		renderFieldSelector(w, target, block, "field_flippermotor_multiple-port-selector")
 	case "flippermotor_motorStop":
 		renderAction(w, target, block, namedInputArg("PORT"))
 	case "flippermotor_motorTurnForDirection":
 		renderAction(w, target, block, namedInputArg("PORT"), namedInputArg("DIRECTION"), fieldInputArg("UNIT", "VALUE"))
+	case "flippermotor_multiple-port-selector":
+		renderFieldSelector(w, target, block, "field_flippermotor_multiple-port-selector")
 	case "flippermotor_single-motor-selector":
 		renderFieldSelector(w, target, block, "field_flippermotor_single-motor-selector")
 	case "flippermotor_speed":
@@ -171,6 +188,8 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		renderBinaryOperator(w, target, block, "<", "OPERAND1", "OPERAND2")
 	case "operator_multiply":
 		renderBinaryOperator(w, target, block, "*", "NUM1", "NUM2")
+	case "operator_not":
+		renderUnaryOperator(w, target, block, "not", "OPERAND")
 	case "operator_subtract":
 		renderBinaryOperator(w, target, block, "-", "NUM1", "NUM2")
 	case "procedures_call":
@@ -432,6 +451,13 @@ func renderBinaryOperator(w io.Writer, target lmsp.ProjectTarget, block *lmsp.Pr
 	visitInput(w, target, block, arg1)
 	fmt.Fprintf(w, " %s ", op)
 	visitInput(w, target, block, arg2)
+	fmt.Fprint(w, ")")
+}
+
+// TODO - make 'op' a lookup
+func renderUnaryOperator(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject, op string, arg lmsp.ProjectInputID) {
+	fmt.Fprint(w, "not(")
+	visitInput(w, target, block, arg)
 	fmt.Fprint(w, ")")
 }
 

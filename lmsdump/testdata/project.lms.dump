@@ -5,9 +5,9 @@ target: j2kW7HqkRlyqy4KHAyn6
   ----- +hSb,YZLRIZ`JZ.E]C.4 -----
   flippermoremotor_motorDidMovement(port: A)
   ----- +n#SwHZBl7=5t3*pRS._ -----
-  flippermoresensors_isPressed(option: pressed, port: flippermoresensors_force-sensor-selector(field_flippermoresensors_force-sensor-selector: A))
+  flippermoresensors_isPressed(port: A, option: pressed)
   ----- ,C($,v-gId,e$Q^N?jHb -----
-  operator_not(operand: flipperoperator_isInBetween(high: 10, low: -10, value: operator_length(string: "apple")))
+  not(flipperoperator_isInBetween(high: 10, low: -10, value: operator_length(string: "apple")))
   ----- 4Y7|,FHwxxHR-uG,Os+q -----
   radiobroadcast_radioSignalReporter(signal: radiobroadcast_broadcast-signal(field_radiobroadcast_broadcast-signal: signal171))
   ----- =Nz[b0CwVKK7I30J#ic- -----
@@ -54,7 +54,7 @@ target: j2kW7HqkRlyqy4KHAyn6
   setMovementSpeed(percent: flippersensors_motion())
   flipperdisplay_ledRotateDirection(direction: flipperdisplay_custom-icon-direction(field_flipperdisplay_custom-icon-direction: clockwise))
   sound_cleareffects()
-  [variable yahey] = flippermoresensors_force(port: flippermoresensors_force-sensor-selector(field_flippermoresensors_force-sensor-selector: A), unit: %)
+  [variable yahey] = flippermoresensors_force(port: A, unit: %)
   flippermoremotor_motorStartSpeed(port: A, speed: flippermoresensors_acceleration(axis: x))
   ----- cq)7G*j,#9J`U;^?erQm -----
   flipperevents_whenOrientation(value: front)
