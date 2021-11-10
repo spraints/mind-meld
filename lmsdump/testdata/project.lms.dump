@@ -1,7 +1,7 @@
 target: Stage
 target: j2kW7HqkRlyqy4KHAyn6
   ----- )cu/Yx7WyxWD[^tjTh|{ -----
-  flippermoremove_moveDidMovement()
+  wasMovementInterrupted()
   ----- +hSb,YZLRIZ`JZ.E]C.4 -----
   flippermoremotor_motorDidMovement(port: A)
   ----- +n#SwHZBl7=5t3*pRS._ -----

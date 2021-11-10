@@ -3,6 +3,7 @@ package lmsdump
 import (
 	"fmt"
 	"io"
+	"os"
 	"sort"
 	"strings"
 
@@ -48,6 +49,9 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		renderComment(w, target, block.Comment)
 	}
 	switch block.Opcode {
+	case "flippermove_stopMove", "flippersensors_resetYaw", "flippersound_stopSound":
+		renderAction(w, target, block)
+
 	case "argument_reporter_string_number":
 		renderFieldSelector(w, target, block, "VALUE")
 	case "control_forever":
@@ -93,8 +97,8 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		renderWhenPressed(w, target, block)
 		w = indent(w) // TODO - move this to a renderX func.
 	case "flipperevents_whenProgramStarts":
-		fmt.Fprint(w, "when program starts:") // TODO - move this to a renderX func.
-		w = indent(w)                         // TODO - move this to a renderX func.
+		renderWhenProgramStarts(w, target, block)
+		w = indent(w) // TODO - move this to a renderX func.
 	case "flippermoremotor_motorSetDegreeCounted":
 		renderAction(w, target, block, namedInputArg("PORT"), namedInputArg("VALUE"))
 	case "flippermoremotor_motorTurnForSpeed":
@@ -143,26 +147,20 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		renderAction(w, target, block, namedInputArg("STEERING"))
 	case "flippermove_steer":
 		renderAction(w, target, block, namedInputArg("STEERING"), fieldInputArg("UNIT", "VALUE"))
-	case "flippermove_stopMove":
-		renderAction(w, target, block)
 	case "flippersensors_color-sensor-selector":
 		renderFieldSelector(w, target, block, "field_flippersensors_color-sensor-selector")
 	case "flippersensors_isReflectivity":
 		renderIsReflectivity(w, target, block)
 	case "flippersensors_orientationAxis":
 		renderAction(w, target, block, fieldArg("AXIS"))
-	case "flippersensors_resetYaw":
-		fmt.Fprint(w, "resetYaw()") // TODO - move this to a renderX func.
 	case "flippersound_beep":
-		renderPlayBeep(w, target, block)
+		renderAction(w, target, block, namedInputArg("NOTE"))
 	case "flippersound_custom-piano":
 		renderFieldSelector(w, target, block, "field_flippersound_custom-piano")
 	case "flippersound_playSound":
-		renderPlaySound(w, target, block)
+		renderAction(w, target, block, namedInputArg("SOUND"))
 	case "flippersound_sound-selector":
 		renderFieldSelector(w, target, block, "field_flippersound_sound-selector")
-	case "flippersound_stopSound":
-		fmt.Fprint(w, "stopSound()") // TODO - move this to a renderX func.
 	case "operator_add":
 		renderBinaryOperator(w, target, block, "+", "NUM1", "NUM2")
 	case "operator_equals":
@@ -183,7 +181,7 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 	case "procedures_prototype":
 		renderProcedurePrototype(w, target, block)
 	default:
-		visitUnknown(w, target, block)
+		visitOtherBlock(w, target, block)
 	}
 	if block.Next != nil {
 		fmt.Fprintln(w) // TODO - move this to a 'renderX' func.
@@ -191,23 +189,29 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 	}
 }
 
-func visitUnknown(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+func visitOtherBlock(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	type sortableArg struct {
 		name string
 		a    argFn
+		code string
 	}
 	argSorter := make([]sortableArg, 0, len(block.Inputs)+len(block.Fields))
 	for input := range block.Inputs {
-		argSorter = append(argSorter, sortableArg{string(input), namedInputArg(input)})
+		argSorter = append(argSorter, sortableArg{string(input), namedInputArg(input), fmt.Sprintf("namedInputArg(%q)", input)})
 	}
 	for field := range block.Fields {
-		argSorter = append(argSorter, sortableArg{string(field), namedFieldArg(field)})
+		argSorter = append(argSorter, sortableArg{string(field), namedFieldArg(field), fmt.Sprintf("namedFieldArg(%q)", field)})
 	}
 	sort.Slice(argSorter, func(i, j int) bool { return argSorter[i].name < argSorter[j].name })
 	args := make([]argFn, 0, len(argSorter))
+	argCode := make([]string, 0, len(argSorter))
 	for _, sa := range argSorter {
 		args = append(args, sa.a)
+		argCode = append(argCode, sa.code)
 	}
+	suggestf("  case %q:\n    renderAction(w, target, block, %s)\n",
+		block.Opcode,
+		strings.Join(argCode, ", "))
 	renderAction(w, target, block, args...)
 }
 
@@ -254,6 +258,7 @@ var opcodeActions = map[lmsp.ProjectOpcode]string{
 	"flippermoremotor_motorSetDegreeCounted":  "setRelativePosition",
 	"flippermoremotor_motorTurnForSpeed":      "runMotor",
 	"flippermoremotor_position":               "relativePosition",
+	"flippermoremove_moveDidMovement":         "wasMovementInterrupted",
 	"flippermotor_absolutePosition":           "position",
 	"flippermotor_motorGoDirectionToPosition": "goToPosition",
 	"flippermotor_motorSetSpeed":              "setMotorSpeed",
@@ -268,6 +273,10 @@ var opcodeActions = map[lmsp.ProjectOpcode]string{
 	"flippermove_steer":                       "move",
 	"flippermove_stopMove":                    "stopMoving",
 	"flippersensors_orientationAxis":          "angle",
+	"flippersensors_resetYaw":                 "resetYaw",
+	"flippersound_beep":                       "beep",
+	"flippersound_playSound":                  "playSound",
+	"flippersound_stopSound":                  "stopSound",
 }
 
 // renderAction visits a block that is like a function call. These may be script
@@ -275,6 +284,7 @@ var opcodeActions = map[lmsp.ProjectOpcode]string{
 func renderAction(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject, args ...argFn) {
 	label, ok := opcodeActions[block.Opcode]
 	if !ok {
+		suggestf("  %q: \"todo\"\n", block.Opcode)
 		label = string(block.Opcode)
 	}
 	fmt.Fprintf(w, "%s(", label)
@@ -351,6 +361,10 @@ func renderWhenBroadcastReceived(w io.Writer, target lmsp.ProjectTarget, block *
 	fmt.Fprintf(w, "when I receive %q:", getField(block, "BROADCAST_OPTION"))
 }
 
+func renderWhenProgramStarts(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	fmt.Fprint(w, "when program starts:")
+}
+
 func renderWhenPressed(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprint(w, "[port ")
 	visitInput(w, target, block, "PORT")
@@ -361,21 +375,6 @@ func renderFieldSelector(w io.Writer, target lmsp.ProjectTarget, block *lmsp.Pro
 	fmt.Fprint(w, getField(block, field))
 }
 
-// XXX
-func renderPlayBeep(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-	fmt.Fprint(w, "beep(note: ")
-	visitInput(w, target, block, "NOTE")
-	fmt.Fprint(w, ")")
-}
-
-// XXX
-func renderPlaySound(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-	fmt.Fprint(w, "playSound(sound: ")
-	visitInput(w, target, block, "SOUND")
-	fmt.Fprint(w, ")")
-}
-
-// XXX
 func renderIsReflectivity(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprint(w, "(reflectivity(port: ")
 	visitInput(w, target, block, "PORT")
@@ -481,4 +480,12 @@ func getField(block *lmsp.ProjectBlockObject, name lmsp.ProjectFieldName) string
 	field := block.Fields[name].([]interface{})
 	// field[0] could be a string, float64, maybe others?
 	return fmt.Sprint(field[0])
+}
+
+var suggestionsEnabled = os.Getenv("SUGGEST") != ""
+
+func suggestf(f string, arg ...interface{}) {
+	if suggestionsEnabled {
+		fmt.Fprintf(os.Stderr, f, arg...)
+	}
 }
