@@ -149,7 +149,7 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 	case "flippersensors_isReflectivity":
 		renderIsReflectivity(w, target, block)
 	case "flippersensors_orientationAxis":
-		renderOrientationAxis(w, target, block)
+		renderAction(w, target, block, fieldArg("AXIS"))
 	case "flippersensors_resetYaw":
 		fmt.Fprint(w, "resetYaw()") // TODO - move this to a renderX func.
 	case "flippersound_beep":
@@ -253,6 +253,7 @@ var opcodeActions = map[lmsp.ProjectOpcode]string{
 	"flippermove_startSteer":                  "startMoving",
 	"flippermove_steer":                       "move",
 	"flippermove_stopMove":                    "stopMoving",
+	"flippersensors_orientationAxis":          "angle",
 }
 
 // renderAction visits a block that is like a function call. These may be script
@@ -347,11 +348,6 @@ func renderFieldSelector(w io.Writer, target lmsp.ProjectTarget, block *lmsp.Pro
 }
 
 // XXX
-func renderOrientationAxis(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-	fmt.Fprintf(w, "orientation(%s)", getField(block, "AXIS"))
-}
-
-// XXX
 func renderPlayBeep(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprint(w, "beep(note: ")
 	visitInput(w, target, block, "NOTE")
@@ -375,25 +371,25 @@ func renderIsReflectivity(w io.Writer, target lmsp.ProjectTarget, block *lmsp.Pr
 }
 
 func renderForever(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-	fmt.Fprint(w, "forever:")
+	fmt.Fprintln(w, "forever:")
 	visitInput(indent(w), target, block, "SUBSTACK")
 }
 
 func renderControl(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject, keyword string) {
 	fmt.Fprintf(w, "%s ", keyword)
 	visitInput(w, target, block, "CONDITION")
-	fmt.Fprint(w, ":")
+	fmt.Fprintln(w, ":")
 	visitInput(indent(w), target, block, "SUBSTACK")
 }
 
 func renderIfElse(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	renderControl(w, target, block, "if")
-	fmt.Fprint(w, "else:")
+	fmt.Fprintln(w, "\nelse:")
 	visitInput(indent(w), target, block, "SUBSTACK2")
 }
 
 func renderWaitUntil(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-	fmt.Fprint(w, "wait until: ")
+	fmt.Fprint(w, "wait until ")
 	visitInput(w, target, block, "CONDITION")
 	fmt.Fprint(w)
 }
@@ -427,7 +423,19 @@ func renderBinaryOperator(w io.Writer, target lmsp.ProjectTarget, block *lmsp.Pr
 }
 
 func visitInput(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject, inputName lmsp.ProjectInputID) {
-	input := block.Inputs[inputName].([]interface{})
+	blockInput, ok := block.Inputs[inputName]
+	if !ok {
+		fmt.Fprintf(w, "[missing input: %q]", inputName) // TODO - move to a render func
+		return
+	}
+
+	if blockInput == nil {
+		fmt.Fprint(w, "[nil]") // TODO - move to a render func
+		return
+	}
+
+	input := blockInput.([]interface{})
+
 	// Input is [shadow, val, opt-val]
 	// var shadowStrs = []string{"(unused)", "shadow", "no shadow", "shadow obscured"}
 	// opt-val only shows up when shadow is 3 (shadow obscured).
