@@ -65,6 +65,10 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 
 	case "argument_reporter_string_number":
 		renderFieldSelector(w, target, block, "VALUE")
+	case "flipperdisplay_menu_ledMatrixIndex":
+		renderFieldSelector(w, target, block, "ledMatrixIndex")
+	case "sensing_keyoptions":
+		renderFieldSelector(w, target, block, "KEY_OPTION")
 	case "flipperdisplay_color-selector-vertical",
 		"flipperdisplay_custom-animate-matrix",
 		"flipperdisplay_custom-icon-direction",
@@ -101,23 +105,31 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		renderControl(w, target, block, "if")
 	case "control_if_else":
 		renderIfElse(w, target, block)
+	case "control_repeat":
+		renderControlRepeat(w, target, block)
 	case "control_repeat_until":
 		renderControl(w, target, block, "until")
 	case "control_wait_until":
 		renderWaitUntil(w, target, block)
 	case "control_wait":
 		renderWait(w, target, block)
+
 	case "data_changevariableby":
 		renderChangeVariableBy(w, target, block)
 	case "data_setvariableto":
 		renderSetVariableTo(w, target, block)
+
 	case "event_broadcast":
+		renderAction(w, target, block, inputArg("BROADCAST_INPUT"))
+	case "event_broadcastandwait":
 		renderAction(w, target, block, inputArg("BROADCAST_INPUT"))
 	case "event_whenbroadcastreceived":
 		renderWhenBroadcastReceived(w, target, block)
 		w = indent(w) // TODO - move this to a renderX func.
+
 	case "flippercontrol_stop":
 		renderAction(w, target, block, fieldArg("STOP_OPTION"))
+
 	case "flipperdisplay_centerButtonLight":
 		renderAction(w, target, block, namedInputArg("COLOR"))
 	case "flipperdisplay_ledAnimation":
@@ -126,22 +138,45 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		renderAction(w, target, block, namedInputArg("MATRIX"))
 	case "flipperdisplay_ledImageFor":
 		renderAction(w, target, block, namedInputArg("MATRIX"), namedInputArg("VALUE"))
+	case "flipperdisplay_ledOn":
+		renderAction(w, target, block, namedInputArg("BRIGHTNESS"), namedInputArg("X"), namedInputArg("Y"))
+	case "flipperdisplay_ultrasonicLightUp":
+		renderAction(w, target, block, namedInputArg("PORT"), namedInputArg("VALUE"))
+
+	case "flipperevents_whenColor":
+		renderWhenColor(w, target, block)
+		w = indent(w) // TODO - move this to a renderX func.
+	case "flipperevents_whenDistance":
+		renderWhenDistance(w, target, block)
+		w = indent(w) // TODO - move this to a renderX func.
 	case "flipperevents_whenPressed":
 		renderWhenPressed(w, target, block)
 		w = indent(w) // TODO - move this to a renderX func.
 	case "flipperevents_whenProgramStarts":
 		renderWhenProgramStarts(w, target, block)
 		w = indent(w) // TODO - move this to a renderX func.
+
 	case "flippermoremotor_motorDidMovement":
 		renderAction(w, target, block, namedInputArg("PORT"))
 	case "flippermoremotor_motorSetDegreeCounted":
 		renderAction(w, target, block, namedInputArg("PORT"), namedInputArg("VALUE"))
+	case "flippermoremotor_motorSetStopMethod":
+		renderAction(w, target, block, namedInputArg("PORT"), namedFieldArg("STOP"))
+	case "flippermoremotor_motorStartPower":
+		renderAction(w, target, block, namedInputArg("PORT"), namedInputArg("POWER"))
 	case "flippermoremotor_motorTurnForSpeed":
 		renderAction(w, target, block, namedInputArg("PORT"), namedInputArg("SPEED"), fieldInputArg("UNIT", "VALUE"))
 	case "flippermoremotor_position":
 		renderAction(w, target, block, namedInputArg("PORT"))
+
+	case "flippermoremove_startDualSpeed":
+		renderAction(w, target, block, namedInputArg("LEFT"), namedInputArg("RIGHT"))
+	case "flippermoremove_startSteerAtSpeed":
+		renderAction(w, target, block, namedInputArg("STEERING"), namedInputArg("SPEED"))
+
 	case "flippermoresensors_isPressed":
 		renderAction(w, target, block, namedInputArg("PORT"), namedFieldArg("OPTION"))
+
 	case "flippermotor_absolutePosition":
 		renderAction(w, target, block, namedInputArg("PORT"))
 	case "flippermotor_motorGoDirectionToPosition":
@@ -156,6 +191,7 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		renderAction(w, target, block, namedInputArg("PORT"), namedInputArg("DIRECTION"), fieldInputArg("UNIT", "VALUE"))
 	case "flippermotor_speed":
 		renderAction(w, target, block, namedInputArg("PORT"))
+
 	case "flippermove_move":
 		renderAction(w, target, block, namedInputArg("DIRECTION"), fieldInputArg("UNIT", "VALUE"))
 	case "flippermove_movementSpeed":
@@ -166,30 +202,53 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		renderAction(w, target, block, namedInputArg("STEERING"))
 	case "flippermove_steer":
 		renderAction(w, target, block, namedInputArg("STEERING"), fieldInputArg("UNIT", "VALUE"))
+
 	case "flipperoperator_isInBetween":
 		renderBetween(w, target, block)
+
 	case "flippersensors_isReflectivity":
 		renderIsReflectivity(w, target, block)
+	case "flippersensors_reflectivity":
+		renderAction(w, target, block, namedInputArg("PORT"))
 	case "flippersensors_orientationAxis":
 		renderAction(w, target, block, fieldArg("AXIS"))
+
 	case "flippersound_beep":
 		renderAction(w, target, block, namedInputArg("NOTE"))
 	case "flippersound_playSound":
 		renderAction(w, target, block, namedInputArg("SOUND"))
+
 	case "operator_add":
 		renderBinaryOperator(w, target, block, "+", "NUM1", "NUM2")
+	case "operator_contains":
+		renderAction(w, target, block, namedInputArg("STRING1"), namedInputArg("STRING2"))
+	case "operator_divide":
+		renderBinaryOperator(w, target, block, "/", "NUM1", "NUM2")
 	case "operator_equals":
 		renderBinaryOperator(w, target, block, "==", "OPERAND1", "OPERAND2")
 	case "operator_gt":
 		renderBinaryOperator(w, target, block, ">", "OPERAND1", "OPERAND2")
+	case "operator_join":
+		renderAction(w, target, block, inputArg("STRING1"), inputArg("STRING2"))
+	case "operator_letter_of":
+		renderAction(w, target, block, inputArg("STRING"), inputArg("LETTER"))
 	case "operator_lt":
 		renderBinaryOperator(w, target, block, "<", "OPERAND1", "OPERAND2")
+	case "operator_mathop":
+		renderMathOp(w, target, block)
 	case "operator_multiply":
 		renderBinaryOperator(w, target, block, "*", "NUM1", "NUM2")
 	case "operator_not":
-		renderUnaryOperator(w, target, block, "not", "OPERAND")
+		renderUnaryOperator(w, target, block, "NOT", "OPERAND")
+	case "operator_or":
+		renderBinaryOperator(w, target, block, "OR", "OPERAND1", "OPERAND2")
+	case "operator_random":
+		renderAction(w, target, block, namedInputArg("FROM"), namedInputArg("TO"))
+	case "operator_round":
+		renderAction(w, target, block, namedInputArg("NUM"))
 	case "operator_subtract":
 		renderBinaryOperator(w, target, block, "-", "NUM1", "NUM2")
+
 	case "procedures_call":
 		renderProcedureCall(w, target, block)
 	case "procedures_definition":
@@ -197,6 +256,13 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		w = indent(w) // TODO - move this to a 'renderX' func.
 	case "procedures_prototype":
 		renderProcedurePrototype(w, target, block)
+
+	case "sensing_keypressed":
+		renderAction(w, target, block, inputArg("KEY_OPTION"))
+
+	case "sound_seteffectto":
+		renderAction(w, target, block, namedFieldArg("EFFECT"), namedInputArg("VALUE"))
+
 	default:
 		visitOtherBlock(w, target, block)
 	}
@@ -382,6 +448,22 @@ func renderWhenProgramStarts(w io.Writer, target lmsp.ProjectTarget, block *lmsp
 	fmt.Fprint(w, "when program starts:")
 }
 
+func renderWhenColor(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	fmt.Fprint(w, "[port ")
+	visitInput(w, target, block, "PORT")
+	fmt.Fprint(w, "] when color is ")
+	visitInput(w, target, block, "OPTION")
+	fmt.Fprint(w, ":")
+}
+
+func renderWhenDistance(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	fmt.Fprint(w, "[port ")
+	visitInput(w, target, block, "PORT")
+	fmt.Fprintf(w, "] when distance %s ", getField(block, "COMPARATOR"))
+	visitInput(w, target, block, "VALUE")
+	fmt.Fprintf(w, " %s:", getField(block, "UNIT"))
+}
+
 func renderWhenPressed(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprint(w, "[port ")
 	visitInput(w, target, block, "PORT")
@@ -412,6 +494,13 @@ func renderIsReflectivity(w io.Writer, target lmsp.ProjectTarget, block *lmsp.Pr
 
 func renderForever(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprintln(w, "forever:")
+	visitInput(indent(w), target, block, "SUBSTACK")
+}
+
+func renderControlRepeat(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	fmt.Fprint(w, "repeat ")
+	visitInput(w, target, block, "TIMES")
+	fmt.Fprintln(w, " times:")
 	visitInput(indent(w), target, block, "SUBSTACK")
 }
 
@@ -466,6 +555,12 @@ func renderBinaryOperator(w io.Writer, target lmsp.ProjectTarget, block *lmsp.Pr
 func renderUnaryOperator(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject, op string, arg lmsp.ProjectInputID) {
 	fmt.Fprint(w, "not(")
 	visitInput(w, target, block, arg)
+	fmt.Fprint(w, ")")
+}
+
+func renderMathOp(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	fmt.Fprintf(w, "math.%s(", getField(block, "OPERATOR"))
+	visitInput(w, target, block, "NUM")
 	fmt.Fprint(w, ")")
 }
 
