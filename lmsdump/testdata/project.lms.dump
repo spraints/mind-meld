@@ -7,7 +7,7 @@ target: j2kW7HqkRlyqy4KHAyn6
   ----- +n#SwHZBl7=5t3*pRS._ -----
   flippermoresensors_isPressed(port: A, option: pressed)
   ----- ,C($,v-gId,e$Q^N?jHb -----
-  not(flipperoperator_isInBetween(high: 10, low: -10, value: operator_length(string: "apple")))
+  not((operator_length(string: "apple") between [-10 and 10]))
   ----- 4Y7|,FHwxxHR-uG,Os+q -----
   radiobroadcast_radioSignalReporter(signal: signal171)
   ----- =Nz[b0CwVKK7I30J#ic- -----

@@ -166,6 +166,8 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		renderAction(w, target, block, namedInputArg("STEERING"))
 	case "flippermove_steer":
 		renderAction(w, target, block, namedInputArg("STEERING"), fieldInputArg("UNIT", "VALUE"))
+	case "flipperoperator_isInBetween":
+		renderBetween(w, target, block)
 	case "flippersensors_isReflectivity":
 		renderIsReflectivity(w, target, block)
 	case "flippersensors_orientationAxis":
@@ -388,6 +390,16 @@ func renderWhenPressed(w io.Writer, target lmsp.ProjectTarget, block *lmsp.Proje
 
 func renderFieldSelector(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject, field lmsp.ProjectFieldName) {
 	fmt.Fprint(w, getField(block, field))
+}
+
+func renderBetween(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	fmt.Fprint(w, "(")
+	visitInput(w, target, block, "VALUE")
+	fmt.Fprint(w, " between [")
+	visitInput(w, target, block, "LOW")
+	fmt.Fprint(w, " and ")
+	visitInput(w, target, block, "HIGH")
+	fmt.Fprint(w, "])")
 }
 
 func renderIsReflectivity(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
