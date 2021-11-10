@@ -65,6 +65,25 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 
 	case "argument_reporter_string_number":
 		renderFieldSelector(w, target, block, "VALUE")
+	case "flipperdisplay_color-selector-vertical",
+		"flipperdisplay_custom-animate-matrix",
+		"flipperdisplay_custom-matrix",
+		"flipperevents_force-sensor-selector",
+		"flippermoremotor_multiple-port-selector",
+		"flippermoremotor_single-motor-selector",
+		"flippermoresensors_force-sensor-selector",
+		"flippermotor_custom-angle",
+		"flippermotor_multiple-port-selector",
+		"flippermotor_single-motor-selector",
+		"flippermotor_custom-icon-direction",
+		"flippermove_custom-icon-direction",
+		"flippermove_movement-port-selector",
+		"flippermove_rotation-wheel",
+		"flippersensors_color-sensor-selector",
+		"flippersound_custom-piano",
+		"flippersound_sound-selector":
+		renderFieldSelector(w, target, block, lmsp.ProjectFieldName("field_"+block.Opcode))
+
 	case "control_forever":
 		renderForever(w, target, block)
 	case "control_if":
@@ -90,20 +109,12 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		renderAction(w, target, block, fieldArg("STOP_OPTION"))
 	case "flipperdisplay_centerButtonLight":
 		renderAction(w, target, block, namedInputArg("COLOR"))
-	case "flipperdisplay_color-selector-vertical":
-		renderFieldSelector(w, target, block, "field_flipperdisplay_color-selector-vertical")
-	case "flipperdisplay_custom-animate-matrix":
-		renderFieldSelector(w, target, block, "field_flipperdisplay_custom-animate-matrix")
-	case "flipperdisplay_custom-matrix":
-		renderFieldSelector(w, target, block, "field_flipperdisplay_custom-matrix")
 	case "flipperdisplay_ledAnimation":
 		renderAction(w, target, block, namedInputArg("MATRIX"))
 	case "flipperdisplay_ledImage":
 		renderAction(w, target, block, namedInputArg("MATRIX"))
 	case "flipperdisplay_ledImageFor":
 		renderAction(w, target, block, namedInputArg("MATRIX"), namedInputArg("VALUE"))
-	case "flipperevents_force-sensor-selector":
-		renderFieldSelector(w, target, block, "field_flipperevents_force-sensor-selector")
 	case "flipperevents_whenPressed":
 		renderWhenPressed(w, target, block)
 		w = indent(w) // TODO - move this to a renderX func.
@@ -116,22 +127,12 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		renderAction(w, target, block, namedInputArg("PORT"), namedInputArg("VALUE"))
 	case "flippermoremotor_motorTurnForSpeed":
 		renderAction(w, target, block, namedInputArg("PORT"), namedInputArg("SPEED"), fieldInputArg("UNIT", "VALUE"))
-	case "flippermoremotor_multiple-port-selector":
-		renderFieldSelector(w, target, block, "field_flippermoremotor_multiple-port-selector")
 	case "flippermoremotor_position":
 		renderAction(w, target, block, namedInputArg("PORT"))
-	case "flippermoremotor_single-motor-selector":
-		renderFieldSelector(w, target, block, "field_flippermoremotor_single-motor-selector")
-	case "flippermoresensors_force-sensor-selector":
-		renderFieldSelector(w, target, block, "field_flippermoresensors_force-sensor-selector")
 	case "flippermoresensors_isPressed":
 		renderAction(w, target, block, namedInputArg("PORT"), namedFieldArg("OPTION"))
 	case "flippermotor_absolutePosition":
 		renderAction(w, target, block, namedInputArg("PORT"))
-	case "flippermotor_custom-angle":
-		renderFieldSelector(w, target, block, "field_flippermotor_custom-angle")
-	case "flippermotor_custom-icon-direction":
-		renderFieldSelector(w, target, block, "field_flippermotor_custom-icon-direction")
 	case "flippermotor_motorGoDirectionToPosition":
 		renderAction(w, target, block, namedInputArg("PORT"), namedInputArg("POSITION"), namedFieldArg("DIRECTION"))
 	case "flippermotor_motorSetSpeed":
@@ -142,42 +143,26 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		renderAction(w, target, block, namedInputArg("PORT"))
 	case "flippermotor_motorTurnForDirection":
 		renderAction(w, target, block, namedInputArg("PORT"), namedInputArg("DIRECTION"), fieldInputArg("UNIT", "VALUE"))
-	case "flippermotor_multiple-port-selector":
-		renderFieldSelector(w, target, block, "field_flippermotor_multiple-port-selector")
-	case "flippermotor_single-motor-selector":
-		renderFieldSelector(w, target, block, "field_flippermotor_single-motor-selector")
 	case "flippermotor_speed":
 		renderAction(w, target, block, namedInputArg("PORT"))
-	case "flippermove_custom-icon-direction":
-		renderFieldSelector(w, target, block, "field_flippermove_custom-icon-direction")
 	case "flippermove_move":
 		renderAction(w, target, block, namedInputArg("DIRECTION"), fieldInputArg("UNIT", "VALUE"))
 	case "flippermove_movementSpeed":
 		renderAction(w, target, block, namedInputArg("SPEED"))
-	case "flippermove_movement-port-selector":
-		renderFieldSelector(w, target, block, "field_flippermove_movement-port-selector")
-	case "flippermove_rotation-wheel":
-		renderFieldSelector(w, target, block, "field_flippermove_rotation-wheel")
 	case "flippermove_setMovementPair":
 		renderAction(w, target, block, namedInputArg("PAIR"))
 	case "flippermove_startSteer":
 		renderAction(w, target, block, namedInputArg("STEERING"))
 	case "flippermove_steer":
 		renderAction(w, target, block, namedInputArg("STEERING"), fieldInputArg("UNIT", "VALUE"))
-	case "flippersensors_color-sensor-selector":
-		renderFieldSelector(w, target, block, "field_flippersensors_color-sensor-selector")
 	case "flippersensors_isReflectivity":
 		renderIsReflectivity(w, target, block)
 	case "flippersensors_orientationAxis":
 		renderAction(w, target, block, fieldArg("AXIS"))
 	case "flippersound_beep":
 		renderAction(w, target, block, namedInputArg("NOTE"))
-	case "flippersound_custom-piano":
-		renderFieldSelector(w, target, block, "field_flippersound_custom-piano")
 	case "flippersound_playSound":
 		renderAction(w, target, block, namedInputArg("SOUND"))
-	case "flippersound_sound-selector":
-		renderFieldSelector(w, target, block, "field_flippersound_sound-selector")
 	case "operator_add":
 		renderBinaryOperator(w, target, block, "+", "NUM1", "NUM2")
 	case "operator_equals":
