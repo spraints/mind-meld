@@ -101,7 +101,7 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 	case "flippermoremotor_multiple-port-selector":
 		renderFieldSelector(w, target, block, "field_flippermoremotor_multiple-port-selector")
 	case "flippermoremotor_position":
-		renderMoreMotorPosition(w, target, block)
+		renderAction(w, target, block, namedInputArg("PORT"))
 	case "flippermoremotor_single-motor-selector":
 		renderFieldSelector(w, target, block, "field_flippermoremotor_single-motor-selector")
 	case "flippermotor_absolutePosition":
@@ -129,21 +129,21 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 	case "flippermove_custom-icon-direction":
 		renderFieldSelector(w, target, block, "field_flippermove_custom-icon-direction")
 	case "flippermove_move":
-		renderMove(w, target, block)
+		renderAction(w, target, block, namedInputArg("DIRECTION"), fieldInputArg("UNIT", "VALUE"))
 	case "flippermove_movementSpeed":
-		renderMovementSpeed(w, target, block)
+		renderAction(w, target, block, namedInputArg("SPEED"))
 	case "flippermove_movement-port-selector":
 		renderFieldSelector(w, target, block, "field_flippermove_movement-port-selector")
 	case "flippermove_rotation-wheel":
 		renderFieldSelector(w, target, block, "field_flippermove_rotation-wheel")
 	case "flippermove_setMovementPair":
-		renderSetMovementPair(w, target, block)
+		renderAction(w, target, block, namedInputArg("PAIR"))
 	case "flippermove_startSteer":
-		renderMoveStartSteer(w, target, block)
+		renderAction(w, target, block, namedInputArg("STEERING"))
 	case "flippermove_steer":
-		renderMoveSteer(w, target, block)
+		renderAction(w, target, block, namedInputArg("STEERING"), fieldInputArg("UNIT", "VALUE"))
 	case "flippermove_stopMove":
-		renderMoveStopMove(w, target, block)
+		renderAction(w, target, block)
 	case "flippersensors_color-sensor-selector":
 		renderFieldSelector(w, target, block, "field_flippersensors_color-sensor-selector")
 	case "flippersensors_isReflectivity":
@@ -239,6 +239,7 @@ var opcodeActions = map[lmsp.ProjectOpcode]string{
 	"flipperdisplay_ledImageFor":              "turnOnPixels",
 	"flippermoremotor_motorSetDegreeCounted":  "setRelativePosition",
 	"flippermoremotor_motorTurnForSpeed":      "runMotor",
+	"flippermoremotor_position":               "relativePosition",
 	"flippermotor_absolutePosition":           "position",
 	"flippermotor_motorGoDirectionToPosition": "goToPosition",
 	"flippermotor_motorSetSpeed":              "setMotorSpeed",
@@ -246,6 +247,12 @@ var opcodeActions = map[lmsp.ProjectOpcode]string{
 	"flippermotor_motorStop":                  "stopMotor",
 	"flippermotor_motorTurnForDirection":      "run",
 	"flippermotor_speed":                      "motorSpeed",
+	"flippermove_move":                        "move",
+	"flippermove_movementSpeed":               "setMovementSpeed",
+	"flippermove_setMovementPair":             "setMovementMotors",
+	"flippermove_startSteer":                  "startMoving",
+	"flippermove_steer":                       "move",
+	"flippermove_stopMove":                    "stopMoving",
 }
 
 // renderAction visits a block that is like a function call. These may be script
@@ -292,6 +299,9 @@ var inputLabelOverrides = map[lmsp.ProjectOpcode]map[lmsp.ProjectInputID]string{
 	"flipperdisplay_ledImageFor": {
 		"VALUE": "seconds",
 	},
+	"flippermove_movementSpeed": {
+		"SPEED": "percent",
+	},
 }
 
 // This goes with the render* funcs.
@@ -332,59 +342,8 @@ func renderWhenPressed(w io.Writer, target lmsp.ProjectTarget, block *lmsp.Proje
 	fmt.Fprintf(w, "] when %s:", getField(block, "OPTION"))
 }
 
-// XXX
-func renderMove(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-	fmt.Fprint(w, "move(direction: ")
-	visitInput(w, target, block, "DIRECTION")
-	fmt.Fprintf(w, ", %s: ", getField(block, "UNIT"))
-	visitInput(w, target, block, "VALUE")
-	fmt.Fprint(w, ")")
-}
-
-// XXX
-func renderMovementSpeed(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-	fmt.Fprint(w, "setMovementSpeed(speed: ")
-	visitInput(w, target, block, "SPEED")
-	fmt.Fprint(w, ")")
-}
-
 func renderFieldSelector(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject, field lmsp.ProjectFieldName) {
 	fmt.Fprint(w, getField(block, field))
-}
-
-// XXX
-func renderMoreMotorPosition(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-	fmt.Fprint(w, "motorPosition(port: ")
-	visitInput(w, target, block, "PORT")
-	fmt.Fprint(w, ")")
-}
-
-// XXX
-func renderSetMovementPair(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-	fmt.Fprint(w, "setMovementPair(")
-	visitInput(w, target, block, "PAIR")
-	fmt.Fprint(w, ")")
-}
-
-// XXX
-func renderMoveStartSteer(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-	fmt.Fprint(w, "startMoveSteer(steering: ")
-	visitInput(w, target, block, "STEERING")
-	fmt.Fprint(w, ")")
-}
-
-// XXX
-func renderMoveSteer(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-	fmt.Fprint(w, "moveSteer(steering: ")
-	visitInput(w, target, block, "STEERING")
-	fmt.Fprintf(w, ", %s: ", getField(block, "UNIT"))
-	visitInput(w, target, block, "VALUE")
-	fmt.Fprint(w, ")")
-}
-
-// XXX
-func renderMoveStopMove(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-	fmt.Fprint(w, "stopMove()")
 }
 
 // XXX
