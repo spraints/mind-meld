@@ -127,7 +127,7 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		renderWhenBroadcastReceived(w, target, block)
 		w = indent(w) // TODO - move this to a renderX func.
 	case "event_whenkeypressed":
-		renderAction(w, target, block, namedFieldArg("KEY_OPTION"))
+		renderWhenKeyPressed(w, target, block)
 		w = indent(w) // TODO - move this to a renderX func.
 
 	case "flippercontrol_stop":
@@ -154,7 +154,7 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 	case "flipperdisplay_ledText":
 		renderAction(w, target, block, namedInputArg("TEXT"))
 	case "flipperdisplay_menu_orientation":
-		renderAction(w, target, block, namedFieldArg("orientation"))
+		renderOrientation(w, target, block)
 	case "flipperdisplay_ultrasonicLightUp":
 		renderAction(w, target, block, namedInputArg("PORT"), namedInputArg("VALUE"))
 
@@ -433,12 +433,22 @@ type argFn func(io.Writer, lmsp.ProjectTarget, *lmsp.ProjectBlockObject)
 
 // This goes with the render* funcs.
 var opcodeActions = map[lmsp.ProjectOpcode]string{
-	"event_broadcast":                         "broadcast",
-	"flippercontrol_stop":                     "stop",
-	"flipperdisplay_centerButtonLight":        "setCenterButtonLight",
-	"flipperdisplay_ledAnimation":             "startAnimation",
-	"flipperdisplay_ledImage":                 "turnOnPixels",
-	"flipperdisplay_ledImageFor":              "turnOnPixels",
+	"event_broadcast":        "broadcast",
+	"event_broadcastandwait": "broadcastAndWait",
+
+	"flippercontrol_stop":            "stop",
+	"flippercontrol_stopOtherStacks": "stopOtherStacks",
+
+	"flipperdisplay_centerButtonLight":     "setCenterButtonLight",
+	"flipperdisplay_displayOff":            "turnOffPixels",
+	"flipperdisplay_ledAnimation":          "startAnimation",
+	"flipperdisplay_ledAnimationUntilDone": "playAnimationUntilDone",
+	"flipperdisplay_ledImage":              "turnOnPixels",
+	"flipperdisplay_ledImageFor":           "turnOnPixels",
+	"flipperdisplay_ledOn":                 "setPixel",
+	"flipperdisplay_ledRotateDirection":    "rotateDisplay",
+	"flipperdisplay_ledRotateOrientation":  "setDisplayRotation",
+
 	"flippermoremotor_motorSetDegreeCounted":  "setRelativePosition",
 	"flippermoremotor_motorTurnForSpeed":      "runMotor",
 	"flippermoremotor_position":               "relativePosition",
@@ -546,6 +556,10 @@ func renderWhenBroadcastReceived(w io.Writer, target lmsp.ProjectTarget, block *
 	fmt.Fprintf(w, "when I receive %q:", getField(block, "BROADCAST_OPTION"))
 }
 
+func renderWhenKeyPressed(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	fmt.Fprintf(w, "when %q key pressed:", getField(block, "KEY_OPTION"))
+}
+
 func renderWhenProgramStarts(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprint(w, "when program starts:")
 }
@@ -574,6 +588,22 @@ func renderWhenPressed(w io.Writer, target lmsp.ProjectTarget, block *lmsp.Proje
 
 func renderFieldSelector(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject, field lmsp.ProjectFieldName) {
 	fmt.Fprint(w, getField(block, field))
+}
+
+func renderOrientation(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	field := getField(block, "orientation")
+	switch field {
+	case "1":
+		fmt.Fprint(w, "upright")
+	case "2":
+		fmt.Fprint(w, "left")
+	case "3":
+		fmt.Fprint(w, "right")
+	case "4":
+		fmt.Fprint(w, "upside down")
+	default:
+		fmt.Fprintf(w, "[orientation %q]", field)
+	}
 }
 
 func renderAcceleration(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
