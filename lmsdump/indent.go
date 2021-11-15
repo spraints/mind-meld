@@ -6,6 +6,10 @@ import (
 )
 
 func indent(w io.Writer) io.Writer {
+	return &indented{w: w, i: false}
+}
+
+func indentStartingNow(w io.Writer) io.Writer {
 	return &indented{w: w, i: true}
 }
 

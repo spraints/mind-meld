@@ -16,7 +16,7 @@ func Dump(w io.Writer, proj lmsp.Project) error {
 			return err
 		}
 		// TODO check for errors in renderTarget.
-		renderTarget(indent(w), target)
+		renderTarget(indentStartingNow(w), target)
 	}
 	return nil
 }
@@ -616,27 +616,27 @@ func renderIsReflectivity(w io.Writer, target lmsp.ProjectTarget, block *lmsp.Pr
 
 func renderForever(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprintln(w, "forever:")
-	visitInput(indent(w), target, block, "SUBSTACK")
+	visitInput(indentStartingNow(w), target, block, "SUBSTACK")
 }
 
 func renderControlRepeat(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprint(w, "repeat ")
 	visitInput(w, target, block, "TIMES")
 	fmt.Fprintln(w, " times:")
-	visitInput(indent(w), target, block, "SUBSTACK")
+	visitInput(indentStartingNow(w), target, block, "SUBSTACK")
 }
 
 func renderControl(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject, keyword string) {
 	fmt.Fprintf(w, "%s ", keyword)
 	visitInput(w, target, block, "CONDITION")
 	fmt.Fprintln(w, ":")
-	visitInput(indent(w), target, block, "SUBSTACK")
+	visitInput(indentStartingNow(w), target, block, "SUBSTACK")
 }
 
 func renderIfElse(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	renderControl(w, target, block, "if")
 	fmt.Fprintln(w, "\nelse:")
-	visitInput(indent(w), target, block, "SUBSTACK2")
+	visitInput(indentStartingNow(w), target, block, "SUBSTACK2")
 }
 
 func renderWaitUntil(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
