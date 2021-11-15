@@ -159,19 +159,19 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		renderAction(w, target, block, namedInputArg("PORT"), namedInputArg("VALUE"))
 
 	case "flipperevents_whenButton":
-		renderAction(w, target, block, namedFieldArg("BUTTON"), namedFieldArg("EVENT"))
+		renderWhenButton(w, target, block)
 		w = indent(w) // TODO - move this to a renderX func.
 	case "flipperevents_whenColor":
 		renderWhenColor(w, target, block)
 		w = indent(w) // TODO - move this to a renderX func.
 	case "flipperevents_whenCondition":
-		renderAction(w, target, block, namedInputArg("CONDITION"))
+		renderWhenCondition(w, target, block)
 		w = indent(w) // TODO - move this to a renderX func.
 	case "flipperevents_whenDistance":
 		renderWhenDistance(w, target, block)
 		w = indent(w) // TODO - move this to a renderX func.
 	case "flipperevents_whenGesture":
-		renderAction(w, target, block, namedFieldArg("EVENT"))
+		renderWhenGesture(w, target, block)
 		w = indent(w) // TODO - move this to a renderX func.
 	case "flipperevents_whenOrientation":
 		renderAction(w, target, block, namedFieldArg("VALUE"))
@@ -305,7 +305,7 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 	case "operator_add":
 		renderBinaryOperator(w, target, block, "+", "NUM1", "NUM2")
 	case "operator_and":
-		renderAction(w, target, block, namedInputArg("OPERAND1"), namedInputArg("OPERAND2"))
+		renderBinaryOperator(w, target, block, "AND", "OPERAND1", "OPERAND2")
 	case "operator_contains":
 		renderAction(w, target, block, namedInputArg("STRING1"), namedInputArg("STRING2"))
 	case "operator_divide":
@@ -325,7 +325,7 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 	case "operator_mathop":
 		renderMathOp(w, target, block)
 	case "operator_mod":
-		renderAction(w, target, block, namedInputArg("NUM1"), namedInputArg("NUM2"))
+		renderBinaryOperator(w, target, block, "mod", "NUM1", "NUM2")
 	case "operator_multiply":
 		renderBinaryOperator(w, target, block, "*", "NUM1", "NUM2")
 	case "operator_not":
@@ -335,7 +335,7 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 	case "operator_random":
 		renderAction(w, target, block, namedInputArg("FROM"), namedInputArg("TO"))
 	case "operator_round":
-		renderAction(w, target, block, namedInputArg("NUM"))
+		renderUnaryOperator(w, target, block, "round", "NUM")
 	case "operator_subtract":
 		renderBinaryOperator(w, target, block, "-", "NUM1", "NUM2")
 
@@ -482,7 +482,7 @@ var opcodeActions = map[lmsp.ProjectOpcode]string{
 func renderAction(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject, args ...argFn) {
 	label, ok := opcodeActions[block.Opcode]
 	if !ok {
-		suggestf("  %q: \"todo\"\n", block.Opcode)
+		suggestf("  %q: \"todo\",\n", block.Opcode)
 		label = string(block.Opcode)
 	}
 	fmt.Fprintf(w, "%s(", label)
@@ -567,11 +567,21 @@ func renderWhenProgramStarts(w io.Writer, target lmsp.ProjectTarget, block *lmsp
 	fmt.Fprint(w, "when program starts:")
 }
 
+func renderWhenButton(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	fmt.Fprintf(w, "when %q button %q:", getField(block, "BUTTON"), getField(block, "EVENT"))
+}
+
 func renderWhenColor(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprint(w, "[port ")
 	visitInput(w, target, block, "PORT")
 	fmt.Fprint(w, "] when color is ")
 	visitInput(w, target, block, "OPTION")
+	fmt.Fprint(w, ":")
+}
+
+func renderWhenCondition(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	fmt.Fprint(w, "when ")
+	visitInput(w, target, block, "CONDITION")
 	fmt.Fprint(w, ":")
 }
 
@@ -581,6 +591,10 @@ func renderWhenDistance(w io.Writer, target lmsp.ProjectTarget, block *lmsp.Proj
 	fmt.Fprintf(w, "] when distance %s ", getField(block, "COMPARATOR"))
 	visitInput(w, target, block, "VALUE")
 	fmt.Fprintf(w, " %s:", getField(block, "UNIT"))
+}
+
+func renderWhenGesture(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	fmt.Fprintf(w, "when gesture %q occurs:", getField(block, "EVENT"))
 }
 
 func renderWhenPressed(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
@@ -708,7 +722,7 @@ func renderBinaryOperator(w io.Writer, target lmsp.ProjectTarget, block *lmsp.Pr
 
 // TODO - make 'op' a lookup
 func renderUnaryOperator(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject, op string, arg lmsp.ProjectInputID) {
-	fmt.Fprint(w, "not(")
+	fmt.Fprintf(w, "%s(", op)
 	visitInput(w, target, block, arg)
 	fmt.Fprint(w, ")")
 }

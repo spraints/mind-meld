@@ -7,11 +7,11 @@ target: j2kW7HqkRlyqy4KHAyn6
   ----- +n#SwHZBl7=5t3*pRS._ -----
   flippermoresensors_isPressed(port: A, option: pressed)
   ----- ,C($,v-gId,e$Q^N?jHb -----
-  not((operator_length(string: "apple") between [-10 and 10]))
+  NOT((operator_length(string: "apple") between [-10 and 10]))
   ----- 4Y7|,FHwxxHR-uG,Os+q -----
   radiobroadcast_radioSignalReporter(signal: signal171)
   ----- =Nz[b0CwVKK7I30J#ic- -----
-  operator_and(operand1: (operator_mod(num1: math.abs([variable yahey]), num2: operator_round(num: relativePosition(port: A))) < flippermoremotor_power(port: A)), operand2: flippersensors_buttonIsPressed(button: left, event: pressed))
+  (((math.abs([variable yahey]) mod round(relativePosition(port: A))) < flippermoremotor_power(port: A)) AND flippersensors_buttonIsPressed(button: left, event: pressed))
   ----- ?_a,!|Im04:;F|()E`Rv -----
   when program starts:
     broadcast([broadcast "message1"])
@@ -28,7 +28,7 @@ target: j2kW7HqkRlyqy4KHAyn6
   ----- H^~Zng(t)T9GCaY~(,O_ -----
   operator_contains(string1: "apple", string2: "a")
   ----- LULWJ*5K5_ZhTK;;HPa6 -----
-  flipperevents_whenGesture(event: shake)
+  when gesture "shake" occurs:
     move(direction: forward, cm: 10)
     write(text: "Hello")
     if flippersensors_isDistance(comparator: <, port: A, unit: %, value: 15):
@@ -73,7 +73,7 @@ target: j2kW7HqkRlyqy4KHAyn6
     [variable yahey] = [variable yahey] + [unset number]
     flippermoremotor_motorGoToRelativePosition(port: A, position: 0, speed: 100)
   ----- f^aJ+eOLo4bPQcDMr!e` -----
-  flipperevents_whenCondition(condition: (reflectivity(port: A) < 50))
+  when (reflectivity(port: A) < 50):
     startMoving(steering: flippersensors_timer())
     setPixelBrightness(brightness: 75)
     sound_changeeffectby(effect: PITCH, value: flippersensors_distance(port: A, unit: %))
@@ -83,7 +83,7 @@ target: j2kW7HqkRlyqy4KHAyn6
   ----- juu4q.MZ_vqaeG^uIGSi -----
   ((operator_join("apple", "banana") > "100") OR (operator_letter_of("apple", 1) == "100"))
   ----- lIBDT4Dwf_nYQNE^ubEv -----
-  flipperevents_whenButton(button: left, event: pressed)
+  when "left" button "pressed":
     move(steering: 0, cm: flippersensors_color(port: A))
     turnOffPixels()
     if flippersensors_isColor(port: A, value: operator_random(from: 1, to: 10)):
