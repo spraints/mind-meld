@@ -28,12 +28,12 @@ target: j2kW7HqkRlyqy4KHAyn6
   ----- H^~Zng(t)T9GCaY~(,O_ -----
   operator_contains(string1: "apple", string2: "a")
   ----- LULWJ*5K5_ZhTK;;HPa6 -----
-  flipperevents_whenGesture(event: shake)
-  move(direction: forward, cm: 10)
-  flipperdisplay_ledText(text: "Hello")
-  if flippersensors_isDistance(comparator: <, port: A, unit: %, value: 15):
-    beep(note: 60)
-  flippermoremove_movementSetStopMethod(stop: 1)
+  flipperevents_whenGesture(event: shake)  
+    move(direction: forward, cm: 10)
+    flipperdisplay_ledText(text: "Hello")
+    if flippersensors_isDistance(comparator: <, port: A, unit: %, value: 15):
+      beep(note: 60)
+    flippermoremove_movementSetStopMethod(stop: 1)
   ----- QOG2Po6Z:5rehv:?bOCP -----
   0
   ----- RbyPD2Fx3{Mu$P%a)gY9 -----
@@ -50,48 +50,48 @@ target: j2kW7HqkRlyqy4KHAyn6
   ----- [U`i$zl!QrB`5}s/]Mq~ -----
   flippersensors_ismotion(motion: shake)
   ----- [d_M?(f#~}c(l_]b$O|] -----
-  flipperevents_whenTimer(value: 10)
-  setMovementSpeed(percent: flippersensors_motion())
-  flipperdisplay_ledRotateDirection(direction: clockwise)
-  sound_cleareffects()
-  [variable yahey] = flippermoresensors_force(port: A, unit: %)
-  flippermoremotor_motorStartSpeed(port: A, speed: flippermoresensors_acceleration(axis: x))
+  flipperevents_whenTimer(value: 10)  
+    setMovementSpeed(percent: flippersensors_motion())
+    flipperdisplay_ledRotateDirection(direction: clockwise)
+    sound_cleareffects()
+    [variable yahey] = flippermoresensors_force(port: A, unit: %)
+    flippermoremotor_motorStartSpeed(port: A, speed: flippermoresensors_acceleration(axis: x))
   ----- cq)7G*j,#9J`U;^?erQm -----
-  flipperevents_whenOrientation(value: front)
-  setMotorSpeed(port: A, speed: 75)
-  turnOnPixels(matrix: 9909999099000009000909990)
-  forever:
-    flippersound_beepForTime(duration: 0.2, note: (( - ( * angle(pitch))) + ( / )))
-    flippermoremotor_motorSetAcceleration(acceleration: flippermoremotor_menu_acceleration(acceleration: -1 -1), port: A)
-    flippermoremove_startDualPower(left: 50, right: 50)
+  flipperevents_whenOrientation(value: front)  
+    setMotorSpeed(port: A, speed: 75)
+    turnOnPixels(matrix: 9909999099000009000909990)
+    forever:
+      flippersound_beepForTime(duration: 0.2, note: (( - ( * angle(pitch))) + ( / )))
+      flippermoremotor_motorSetAcceleration(acceleration: flippermoremotor_menu_acceleration(acceleration: -1 -1), port: A)
+      flippermoremove_startDualPower(left: 50, right: 50)
   ----- eKj?:Mvjx5T_)##9brdB -----
-  event_whenkeypressed(key_option: space)
-  setMovementMotors(pair: AB)
-  flipperdisplay_ledRotateOrientation(orientation: flipperdisplay_menu_orientation(orientation: 1))
-  sound_changevolumeby(volume: flippersensors_orientation())
-  flippersensors_resetTimer()
-  [variable yahey] = [variable yahey] + 
-  flippermoremotor_motorGoToRelativePosition(port: A, position: 0, speed: 100)
+  event_whenkeypressed(key_option: space)  
+    setMovementMotors(pair: AB)
+    flipperdisplay_ledRotateOrientation(orientation: flipperdisplay_menu_orientation(orientation: 1))
+    sound_changevolumeby(volume: flippersensors_orientation())
+    flippersensors_resetTimer()
+    [variable yahey] = [variable yahey] + 
+    flippermoremotor_motorGoToRelativePosition(port: A, position: 0, speed: 100)
   ----- f^aJ+eOLo4bPQcDMr!e` -----
-  flipperevents_whenCondition(condition: (reflectivity(port: A) < 50))
-  startMoving(steering: flippersensors_timer())
-  flipperdisplay_ledSetBrightness(brightness: 75)
-  sound_changeeffectby(effect: PITCH, value: flippersensors_distance(port: A, unit: %))
-  flippercontrol_stopOtherStacks()
-  resetYaw()
-  setRelativePosition(port: A, value: 0)
+  flipperevents_whenCondition(condition: (reflectivity(port: A) < 50))  
+    startMoving(steering: flippersensors_timer())
+    flipperdisplay_ledSetBrightness(brightness: 75)
+    sound_changeeffectby(effect: PITCH, value: flippersensors_distance(port: A, unit: %))
+    flippercontrol_stopOtherStacks()
+    resetYaw()
+    setRelativePosition(port: A, value: 0)
   ----- juu4q.MZ_vqaeG^uIGSi -----
   ((operator_join("apple", "banana") > "100") OR (operator_letter_of("apple", 1) == "100"))
   ----- lIBDT4Dwf_nYQNE^ubEv -----
-  flipperevents_whenButton(button: left, event: pressed)
-  move(steering: 0, cm: flippersensors_color(port: A))
-  flipperdisplay_displayOff()
-  if flippersensors_isColor(port: A, value: operator_random(from: 1, to: 10)):
-    stopSound()
-  else:
-  
-  runMotor(port: A, speed: 75, rotations: flippermoresensors_rawColor(color: 0, port: A))
-  flippermoremove_movementSetAcceleration(acceleration: flippermoremove_menu_acceleration(acceleration: -1 -1))
+  flipperevents_whenButton(button: left, event: pressed)  
+    move(steering: 0, cm: flippersensors_color(port: A))
+    flipperdisplay_displayOff()
+    if flippersensors_isColor(port: A, value: operator_random(from: 1, to: 10)):
+      stopSound()
+    else:
+    
+    runMotor(port: A, speed: 75, rotations: flippermoresensors_rawColor(color: 0, port: A))
+    setMovementAcceleration(default)
   ----- npn[Q4Gg{)^$rj+yW-r/ -----
   60
   ----- pxCHF7dudaB;TuA=w:#X -----

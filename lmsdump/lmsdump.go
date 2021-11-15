@@ -126,6 +126,9 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 	case "event_whenbroadcastreceived":
 		renderWhenBroadcastReceived(w, target, block)
 		w = indent(w) // TODO - move this to a renderX func.
+	case "event_whenkeypressed":
+		renderAction(w, target, block, namedFieldArg("KEY_OPTION"))
+		w = indent(w) // TODO - move this to a renderX func.
 
 	case "flippercontrol_stop":
 		renderAction(w, target, block, fieldArg("STOP_OPTION"))
@@ -134,20 +137,44 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		renderAction(w, target, block, namedInputArg("COLOR"))
 	case "flipperdisplay_ledAnimation":
 		renderAction(w, target, block, namedInputArg("MATRIX"))
+	case "flipperdisplay_ledAnimationUntilDone":
+		renderAction(w, target, block, namedInputArg("MATRIX"))
 	case "flipperdisplay_ledImage":
 		renderAction(w, target, block, namedInputArg("MATRIX"))
 	case "flipperdisplay_ledImageFor":
 		renderAction(w, target, block, namedInputArg("MATRIX"), namedInputArg("VALUE"))
 	case "flipperdisplay_ledOn":
 		renderAction(w, target, block, namedInputArg("BRIGHTNESS"), namedInputArg("X"), namedInputArg("Y"))
+	case "flipperdisplay_ledRotateDirection":
+		renderAction(w, target, block, namedInputArg("DIRECTION"))
+	case "flipperdisplay_ledRotateOrientation":
+		renderAction(w, target, block, namedInputArg("ORIENTATION"))
+	case "flipperdisplay_ledSetBrightness":
+		renderAction(w, target, block, namedInputArg("BRIGHTNESS"))
+	case "flipperdisplay_ledText":
+		renderAction(w, target, block, namedInputArg("TEXT"))
+	case "flipperdisplay_menu_orientation":
+		renderAction(w, target, block, namedFieldArg("orientation"))
 	case "flipperdisplay_ultrasonicLightUp":
 		renderAction(w, target, block, namedInputArg("PORT"), namedInputArg("VALUE"))
 
+	case "flipperevents_whenButton":
+		renderAction(w, target, block, namedFieldArg("BUTTON"), namedFieldArg("EVENT"))
+		w = indent(w) // TODO - move this to a renderX func.
 	case "flipperevents_whenColor":
 		renderWhenColor(w, target, block)
 		w = indent(w) // TODO - move this to a renderX func.
+	case "flipperevents_whenCondition":
+		renderAction(w, target, block, namedInputArg("CONDITION"))
+		w = indent(w) // TODO - move this to a renderX func.
 	case "flipperevents_whenDistance":
 		renderWhenDistance(w, target, block)
+		w = indent(w) // TODO - move this to a renderX func.
+	case "flipperevents_whenGesture":
+		renderAction(w, target, block, namedFieldArg("EVENT"))
+		w = indent(w) // TODO - move this to a renderX func.
+	case "flipperevents_whenOrientation":
+		renderAction(w, target, block, namedFieldArg("VALUE"))
 		w = indent(w) // TODO - move this to a renderX func.
 	case "flipperevents_whenPressed":
 		renderWhenPressed(w, target, block)
@@ -155,27 +182,62 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 	case "flipperevents_whenProgramStarts":
 		renderWhenProgramStarts(w, target, block)
 		w = indent(w) // TODO - move this to a renderX func.
+	case "flipperevents_whenTimer":
+		renderAction(w, target, block, namedInputArg("VALUE"))
+		w = indent(w) // TODO - move this to a renderX func.
 
+	case "flippermoremotor_menu_acceleration":
+		renderAction(w, target, block, namedFieldArg("acceleration"))
 	case "flippermoremotor_motorDidMovement":
 		renderAction(w, target, block, namedInputArg("PORT"))
+	case "flippermoremotor_motorGoToRelativePosition":
+		renderAction(w, target, block, namedInputArg("PORT"), namedInputArg("POSITION"), namedInputArg("SPEED"))
+	case "flippermoremotor_motorSetAcceleration":
+		renderAction(w, target, block, namedInputArg("ACCELERATION"), namedInputArg("PORT"))
 	case "flippermoremotor_motorSetDegreeCounted":
 		renderAction(w, target, block, namedInputArg("PORT"), namedInputArg("VALUE"))
+	case "flippermoremotor_motorSetStallDetection":
+		renderAction(w, target, block, namedFieldArg("ENABLED"), namedInputArg("PORT"))
 	case "flippermoremotor_motorSetStopMethod":
 		renderAction(w, target, block, namedInputArg("PORT"), namedFieldArg("STOP"))
 	case "flippermoremotor_motorStartPower":
 		renderAction(w, target, block, namedInputArg("PORT"), namedInputArg("POWER"))
+	case "flippermoremotor_motorStartSpeed":
+		renderAction(w, target, block, namedInputArg("PORT"), namedInputArg("SPEED"))
 	case "flippermoremotor_motorTurnForSpeed":
 		renderAction(w, target, block, namedInputArg("PORT"), namedInputArg("SPEED"), fieldInputArg("UNIT", "VALUE"))
 	case "flippermoremotor_position":
 		renderAction(w, target, block, namedInputArg("PORT"))
+	case "flippermoremotor_power":
+		renderAction(w, target, block, namedInputArg("PORT"))
 
+	case "flippermoremove_menu_acceleration":
+		renderAcceleration(w, target, block)
+	case "flippermoremove_moveDistanceAtSpeed":
+		renderAction(w, target, block, namedInputArg("DISTANCE"), namedInputArg("LEFT"), namedInputArg("RIGHT"), namedFieldArg("UNIT"))
+	case "flippermoremove_movementSetAcceleration":
+		renderAction(w, target, block, inputArg("ACCELERATION"))
+	case "flippermoremove_movementSetStopMethod":
+		renderAction(w, target, block, namedFieldArg("STOP"))
+	case "flippermoremove_startDualPower":
+		renderAction(w, target, block, namedInputArg("LEFT"), namedInputArg("RIGHT"))
 	case "flippermoremove_startDualSpeed":
 		renderAction(w, target, block, namedInputArg("LEFT"), namedInputArg("RIGHT"))
 	case "flippermoremove_startSteerAtSpeed":
 		renderAction(w, target, block, namedInputArg("STEERING"), namedInputArg("SPEED"))
+	case "flippermoremove_steerDistanceAtSpeed":
+		renderAction(w, target, block, namedInputArg("DISTANCE"), namedInputArg("SPEED"), namedInputArg("STEERING"), namedFieldArg("UNIT"))
 
+	case "flippermoresensors_acceleration":
+		renderAction(w, target, block, namedFieldArg("AXIS"))
+	case "flippermoresensors_angularVelocity":
+		renderAction(w, target, block, namedFieldArg("AXIS"))
+	case "flippermoresensors_force":
+		renderAction(w, target, block, namedInputArg("PORT"), namedFieldArg("UNIT"))
 	case "flippermoresensors_isPressed":
 		renderAction(w, target, block, namedInputArg("PORT"), namedFieldArg("OPTION"))
+	case "flippermoresensors_rawColor":
+		renderAction(w, target, block, namedFieldArg("COLOR"), namedInputArg("PORT"))
 
 	case "flippermotor_absolutePosition":
 		renderAction(w, target, block, namedInputArg("PORT"))
@@ -196,6 +258,8 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		renderAction(w, target, block, namedInputArg("DIRECTION"), fieldInputArg("UNIT", "VALUE"))
 	case "flippermove_movementSpeed":
 		renderAction(w, target, block, namedInputArg("SPEED"))
+	case "flippermove_setDistance":
+		renderAction(w, target, block, namedInputArg("DISTANCE"), namedFieldArg("UNIT"))
 	case "flippermove_setMovementPair":
 		renderAction(w, target, block, namedInputArg("PAIR"))
 	case "flippermove_startSteer":
@@ -206,6 +270,20 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 	case "flipperoperator_isInBetween":
 		renderBetween(w, target, block)
 
+	case "flippersensors_buttonIsPressed":
+		renderAction(w, target, block, namedFieldArg("BUTTON"), namedFieldArg("EVENT"))
+	case "flippersensors_color":
+		renderAction(w, target, block, namedInputArg("PORT"))
+	case "flippersensors_distance":
+		renderAction(w, target, block, namedInputArg("PORT"), namedFieldArg("UNIT"))
+	case "flippersensors_isColor":
+		renderAction(w, target, block, namedInputArg("PORT"), namedInputArg("VALUE"))
+	case "flippersensors_isDistance":
+		renderAction(w, target, block, namedFieldArg("COMPARATOR"), namedInputArg("PORT"), namedFieldArg("UNIT"), namedInputArg("VALUE"))
+	case "flippersensors_ismotion":
+		renderAction(w, target, block, namedFieldArg("MOTION"))
+	case "flippersensors_isorientation":
+		renderAction(w, target, block, namedFieldArg("ORIENTATION"))
 	case "flippersensors_isReflectivity":
 		renderIsReflectivity(w, target, block)
 	case "flippersensors_reflectivity":
@@ -215,11 +293,19 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 
 	case "flippersound_beep":
 		renderAction(w, target, block, namedInputArg("NOTE"))
+	case "flippersound_beepForTime":
+		renderAction(w, target, block, namedInputArg("DURATION"), namedInputArg("NOTE"))
 	case "flippersound_playSound":
 		renderAction(w, target, block, namedInputArg("SOUND"))
+	case "flippersound_playSoundUntilDone":
+		renderAction(w, target, block, namedInputArg("SOUND"))
+	case "sound_setvolumeto":
+		renderAction(w, target, block, namedInputArg("VOLUME"))
 
 	case "operator_add":
 		renderBinaryOperator(w, target, block, "+", "NUM1", "NUM2")
+	case "operator_and":
+		renderAction(w, target, block, namedInputArg("OPERAND1"), namedInputArg("OPERAND2"))
 	case "operator_contains":
 		renderAction(w, target, block, namedInputArg("STRING1"), namedInputArg("STRING2"))
 	case "operator_divide":
@@ -230,12 +316,16 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		renderBinaryOperator(w, target, block, ">", "OPERAND1", "OPERAND2")
 	case "operator_join":
 		renderAction(w, target, block, inputArg("STRING1"), inputArg("STRING2"))
+	case "operator_length":
+		renderAction(w, target, block, namedInputArg("STRING"))
 	case "operator_letter_of":
 		renderAction(w, target, block, inputArg("STRING"), inputArg("LETTER"))
 	case "operator_lt":
 		renderBinaryOperator(w, target, block, "<", "OPERAND1", "OPERAND2")
 	case "operator_mathop":
 		renderMathOp(w, target, block)
+	case "operator_mod":
+		renderAction(w, target, block, namedInputArg("NUM1"), namedInputArg("NUM2"))
 	case "operator_multiply":
 		renderBinaryOperator(w, target, block, "*", "NUM1", "NUM2")
 	case "operator_not":
@@ -257,9 +347,20 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 	case "procedures_prototype":
 		renderProcedurePrototype(w, target, block)
 
+	case "radiobroadcast_radioSignalReporter":
+		renderAction(w, target, block, namedInputArg("SIGNAL"))
+	case "radiobroadcast_broadcastRadioSignalWithValueCommand":
+		renderAction(w, target, block, namedInputArg("SIGNAL"), namedInputArg("VALUE"))
+	case "radiobroadcast_whenIReceiveRadioSignalHat":
+		renderAction(w, target, block, namedInputArg("SIGNAL"))
+
 	case "sensing_keypressed":
 		renderAction(w, target, block, inputArg("KEY_OPTION"))
 
+	case "sound_changeeffectby":
+		renderAction(w, target, block, namedFieldArg("EFFECT"), namedInputArg("VALUE"))
+	case "sound_changevolumeby":
+		renderAction(w, target, block, namedInputArg("VOLUME"))
 	case "sound_seteffectto":
 		renderAction(w, target, block, namedFieldArg("EFFECT"), namedInputArg("VALUE"))
 
@@ -341,6 +442,7 @@ var opcodeActions = map[lmsp.ProjectOpcode]string{
 	"flippermoremotor_motorSetDegreeCounted":  "setRelativePosition",
 	"flippermoremotor_motorTurnForSpeed":      "runMotor",
 	"flippermoremotor_position":               "relativePosition",
+	"flippermoremove_movementSetAcceleration": "setMovementAcceleration",
 	"flippermoremove_moveDidMovement":         "wasMovementInterrupted",
 	"flippermotor_absolutePosition":           "position",
 	"flippermotor_motorGoDirectionToPosition": "goToPosition",
@@ -474,6 +576,26 @@ func renderFieldSelector(w io.Writer, target lmsp.ProjectTarget, block *lmsp.Pro
 	fmt.Fprint(w, getField(block, field))
 }
 
+func renderAcceleration(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	field := getField(block, "acceleration")
+	switch field {
+	case "-1 -1":
+		fmt.Fprint(w, "default")
+	case "100 100":
+		fmt.Fprint(w, "fast")
+	case "350 350":
+		fmt.Fprint(w, "balanced")
+	case "800 800":
+		fmt.Fprint(w, "smooth")
+	case "1200 1200":
+		fmt.Fprint(w, "slow")
+	case "2000 2000":
+		fmt.Fprint(w, "very slow")
+	default:
+		fmt.Fprint(w, field)
+	}
+}
+
 func renderBetween(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprint(w, "(")
 	visitInput(w, target, block, "VALUE")
@@ -589,7 +711,11 @@ func visitInput(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlock
 		v := val[1].(string)
 		switch id {
 		case 4, 5, 6, 7, 8, 9:
-			fmt.Fprint(w, v) // TODO - move this to a render* func
+			if v == "" {
+				fmt.Fprint(w, "[unset number]") // TODO - move this to a render* func
+			} else {
+				fmt.Fprint(w, v) // TODO - move this to a render* func
+			}
 		case 10:
 			fmt.Fprintf(w, "%q", v) // TODO - move this to a render* func
 		case 11:
