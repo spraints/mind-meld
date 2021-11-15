@@ -448,6 +448,9 @@ var opcodeActions = map[lmsp.ProjectOpcode]string{
 	"flipperdisplay_ledOn":                 "setPixel",
 	"flipperdisplay_ledRotateDirection":    "rotateDisplay",
 	"flipperdisplay_ledRotateOrientation":  "setDisplayRotation",
+	"flipperdisplay_ledSetBrightness":      "setPixelBrightness",
+	"flipperdisplay_ledText":               "write",
+	"flipperdisplay_ultrasonicLightUp":     "lightUpUltrasonicSensor",
 
 	"flippermoremotor_motorSetDegreeCounted":  "setRelativePosition",
 	"flippermoremotor_motorTurnForSpeed":      "runMotor",
