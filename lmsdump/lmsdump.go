@@ -174,7 +174,7 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		renderWhenGesture(w, target, block)
 		w = indent(w) // TODO - move this to a renderX func.
 	case "flipperevents_whenOrientation":
-		renderAction(w, target, block, namedFieldArg("VALUE"))
+		renderWhenOrientation(w, target, block)
 		w = indent(w) // TODO - move this to a renderX func.
 	case "flipperevents_whenPressed":
 		renderWhenPressed(w, target, block)
@@ -466,6 +466,7 @@ var opcodeActions = map[lmsp.ProjectOpcode]string{
 
 	"flippermoremove_movementSetAcceleration": "setMovementAcceleration",
 	"flippermoremove_moveDidMovement":         "wasMovementInterrupted",
+
 	"flippermotor_absolutePosition":           "position",
 	"flippermotor_motorGoDirectionToPosition": "goToPosition",
 	"flippermotor_motorSetSpeed":              "setMotorSpeed",
@@ -491,7 +492,7 @@ var opcodeActions = map[lmsp.ProjectOpcode]string{
 func renderAction(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject, args ...argFn) {
 	label, ok := opcodeActions[block.Opcode]
 	if !ok {
-		suggestf("  %q: \"todo\",\n", block.Opcode)
+		suggestf("  %q: \"todo--%s\",\n", block.Opcode, block.Opcode)
 		label = string(block.Opcode)
 	}
 	fmt.Fprintf(w, "%s(", label)
@@ -610,6 +611,10 @@ func renderWhenDistance(w io.Writer, target lmsp.ProjectTarget, block *lmsp.Proj
 
 func renderWhenGesture(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprintf(w, "when gesture %q occurs:", getField(block, "EVENT"))
+}
+
+func renderWhenOrientation(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	fmt.Fprintf(w, "when %q is up:", getField(block, "VALUE"))
 }
 
 func renderWhenPressed(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
