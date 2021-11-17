@@ -3,7 +3,7 @@ target: j2kW7HqkRlyqy4KHAyn6
   ----- )cu/Yx7WyxWD[^tjTh|{ -----
   wasMovementInterrupted()
   ----- +hSb,YZLRIZ`JZ.E]C.4 -----
-  flippermoremotor_motorDidMovement(port: A)
+  wasMotorInterrupted(port: A)
   ----- +n#SwHZBl7=5t3*pRS._ -----
   flippermoresensors_isPressed(port: A, option: pressed)
   ----- ,C($,v-gId,e$Q^N?jHb -----
@@ -11,7 +11,7 @@ target: j2kW7HqkRlyqy4KHAyn6
   ----- 4Y7|,FHwxxHR-uG,Os+q -----
   radiobroadcast_radioSignalReporter(signal: signal171)
   ----- =Nz[b0CwVKK7I30J#ic- -----
-  (((math.abs([variable yahey]) mod round(relativePosition(port: A))) < flippermoremotor_power(port: A)) AND flippersensors_buttonIsPressed(button: left, event: pressed))
+  (((math.abs([variable yahey]) mod round(relativePosition(port: A))) < motorPower(port: A)) AND flippersensors_buttonIsPressed(button: left, event: pressed))
   ----- ?_a,!|Im04:;F|()E`Rv -----
   when program starts:
     broadcast([broadcast "message1"])
@@ -19,7 +19,7 @@ target: j2kW7HqkRlyqy4KHAyn6
     flippermove_setDistance(distance: sound_volume(), unit: cm)
     setCenterButtonLight(color: 9)
     sound_setvolumeto(volume: 100)
-    flippermoremotor_motorSetStallDetection(enabled: true, port: A)
+    setStallDetection(enabled: true, port: A)
     flippermoremove_moveDistanceAtSpeed(distance: 10, left: 50, right: 50, unit: cm)
   ----- G.pFPgfPfuoC$ih2op4f -----
   9
@@ -50,19 +50,19 @@ target: j2kW7HqkRlyqy4KHAyn6
   ----- [U`i$zl!QrB`5}s/]Mq~ -----
   flippersensors_ismotion(motion: shake)
   ----- [d_M?(f#~}c(l_]b$O|] -----
-  flipperevents_whenTimer(value: 10)
+  when timer > 10:
     setMovementSpeed(percent: flippersensors_motion())
     rotateDisplay(direction: clockwise)
     sound_cleareffects()
     [variable yahey] = flippermoresensors_force(port: A, unit: %)
-    flippermoremotor_motorStartSpeed(port: A, speed: flippermoresensors_acceleration(axis: x))
+    startMotor(port: A, speed: flippermoresensors_acceleration(axis: x))
   ----- cq)7G*j,#9J`U;^?erQm -----
   flipperevents_whenOrientation(value: front)
     setMotorSpeed(port: A, speed: 75)
     turnOnPixels(matrix: 9909999099000009000909990)
     forever:
       flippersound_beepForTime(duration: 0.2, note: (([unset number] - ([unset number] * angle(pitch))) + ([unset number] / [unset number])))
-      flippermoremotor_motorSetAcceleration(acceleration: flippermoremotor_menu_acceleration(acceleration: -1 -1), port: A)
+      setAcceleration(acceleration: default, port: A)
       flippermoremove_startDualPower(left: 50, right: 50)
   ----- eKj?:Mvjx5T_)##9brdB -----
   when "space" key pressed:
@@ -71,7 +71,7 @@ target: j2kW7HqkRlyqy4KHAyn6
     sound_changevolumeby(volume: flippersensors_orientation())
     flippersensors_resetTimer()
     [variable yahey] = [variable yahey] + [unset number]
-    flippermoremotor_motorGoToRelativePosition(port: A, position: 0, speed: 100)
+    goToRelativePosition(port: A, position: 0, speed: 100)
   ----- f^aJ+eOLo4bPQcDMr!e` -----
   when (reflectivity(port: A) < 50):
     startMoving(steering: flippersensors_timer())
@@ -99,7 +99,7 @@ target: j2kW7HqkRlyqy4KHAyn6
     stopMoving()
     setPixel(brightness: 100, x: 1, y: 1)
     sound_seteffectto(effect: PITCH, value: 100)
-    flippermoremotor_motorStartPower(port: A, power: 100)
+    startMotor(port: A, power: 100)
     stop(all)
   ----- q[D.+7+CrX!.BEnOIH9K -----
   flippersensors_isorientation(orientation: front)
@@ -115,7 +115,7 @@ target: j2kW7HqkRlyqy4KHAyn6
     turnOnPixels(matrix: 9909999099000009000909990, seconds: 2)
     repeat flippersensors_reflectivity(port: A) times:
       playSound(sound: {"name":"Cat Meow 1","location":"device"})
-    flippermoremotor_motorSetStopMethod(port: A, stop: 1)
+    setStopMethod(port: A, stop: 1)
     flippermoremove_startSteerAtSpeed(steering: 0, speed: 50)
   ----- ~Rx3RfzjNzIQ%Rx]2t7] -----
   [port A] when color is 9:

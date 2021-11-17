@@ -66,7 +66,7 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 	case "argument_reporter_string_number":
 		renderFieldSelector(w, target, block, "VALUE")
 	case "flipperdisplay_menu_ledMatrixIndex":
-		renderFieldSelector(w, target, block, "ledMatrixIndex")
+		renderMenu(w, target, block, "ledMatrixIndex")
 	case "sensing_keyoptions":
 		renderFieldSelector(w, target, block, "KEY_OPTION")
 	case "flipperdisplay_color-selector-vertical",
@@ -452,9 +452,18 @@ var opcodeActions = map[lmsp.ProjectOpcode]string{
 	"flipperdisplay_ledText":               "write",
 	"flipperdisplay_ultrasonicLightUp":     "lightUpUltrasonicSensor",
 
-	"flippermoremotor_motorSetDegreeCounted":  "setRelativePosition",
-	"flippermoremotor_motorTurnForSpeed":      "runMotor",
-	"flippermoremotor_position":               "relativePosition",
+	"flippermoremotor_motorDidMovement":          "wasMotorInterrupted",
+	"flippermoremotor_motorGoToRelativePosition": "goToRelativePosition",
+	"flippermoremotor_motorSetAcceleration":      "setAcceleration",
+	"flippermoremotor_motorSetDegreeCounted":     "setRelativePosition",
+	"flippermoremotor_motorSetStallDetection":    "setStallDetection",
+	"flippermoremotor_motorSetStopMethod":        "setStopMethod",
+	"flippermoremotor_motorStartPower":           "startMotor",
+	"flippermoremotor_motorStartSpeed":           "startMotor",
+	"flippermoremotor_motorTurnForSpeed":         "runMotor",
+	"flippermoremotor_position":                  "relativePosition",
+	"flippermoremotor_power":                     "motorPower",
+
 	"flippermoremove_movementSetAcceleration": "setMovementAcceleration",
 	"flippermoremove_moveDidMovement":         "wasMovementInterrupted",
 	"flippermotor_absolutePosition":           "position",
@@ -614,6 +623,14 @@ func renderFieldSelector(w io.Writer, target lmsp.ProjectTarget, block *lmsp.Pro
 }
 
 var menus = map[lmsp.ProjectOpcode]map[string]string{
+
+	"flipperdisplay_menu_ledMatrixIndex": {
+		"1": "1",
+		"2": "2",
+		"3": "3",
+		"4": "4",
+		"5": "5",
+	},
 	"flipperdisplay_menu_orientation": {
 		"1": "upright",
 		"2": "left",
