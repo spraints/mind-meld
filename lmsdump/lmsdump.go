@@ -486,17 +486,20 @@ var opcodeActions = map[lmsp.ProjectOpcode]string{
 	"flippermotor_motorStop":                  "stopMotor",
 	"flippermotor_motorTurnForDirection":      "run",
 	"flippermotor_speed":                      "motorSpeed",
-	"flippermove_move":                        "move",
-	"flippermove_movementSpeed":               "setMovementSpeed",
-	"flippermove_setMovementPair":             "setMovementMotors",
-	"flippermove_startSteer":                  "startMoving",
-	"flippermove_steer":                       "move",
-	"flippermove_stopMove":                    "stopMoving",
-	"flippersensors_orientationAxis":          "angle",
-	"flippersensors_resetYaw":                 "resetYaw",
-	"flippersound_beep":                       "beep",
-	"flippersound_playSound":                  "playSound",
-	"flippersound_stopSound":                  "stopSound",
+
+	"flippermove_move":            "move",
+	"flippermove_movementSpeed":   "setMovementSpeed",
+	"flippermove_setDistance":     "setOneMotorRotationDistance",
+	"flippermove_setMovementPair": "setMovementMotors",
+	"flippermove_startSteer":      "startMoving",
+	"flippermove_steer":           "move",
+	"flippermove_stopMove":        "stopMoving",
+
+	"flippersensors_orientationAxis": "angle",
+	"flippersensors_resetYaw":        "resetYaw",
+	"flippersound_beep":              "beep",
+	"flippersound_playSound":         "playSound",
+	"flippersound_stopSound":         "stopSound",
 }
 
 // renderAction visits a block that is like a function call. These may be script

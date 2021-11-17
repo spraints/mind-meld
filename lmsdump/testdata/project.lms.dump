@@ -16,7 +16,7 @@ target: j2kW7HqkRlyqy4KHAyn6
   when program starts:
     broadcast([broadcast "message1"])
     run(port: A, direction: clockwise, rotations: position(port: A))
-    flippermove_setDistance(distance: sound_volume(), unit: cm)
+    setOneMotorRotationDistance(distance: sound_volume(), unit: cm)
     setCenterButtonLight(color: 9)
     sound_setvolumeto(volume: 100)
     setStallDetection(enabled: true, port: A)
