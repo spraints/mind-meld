@@ -154,7 +154,7 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 	case "flipperdisplay_ledText":
 		renderAction(w, target, block, namedInputArg("TEXT"))
 	case "flipperdisplay_menu_orientation":
-		renderOrientation(w, target, block)
+		renderMenu(w, target, block, "orientation")
 	case "flipperdisplay_ultrasonicLightUp":
 		renderAction(w, target, block, namedInputArg("PORT"), namedInputArg("VALUE"))
 
@@ -183,11 +183,11 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		renderWhenProgramStarts(w, target, block)
 		w = indent(w) // TODO - move this to a renderX func.
 	case "flipperevents_whenTimer":
-		renderAction(w, target, block, namedInputArg("VALUE"))
+		renderWhenTimer(w, target, block)
 		w = indent(w) // TODO - move this to a renderX func.
 
 	case "flippermoremotor_menu_acceleration":
-		renderAction(w, target, block, namedFieldArg("acceleration"))
+		renderMenu(w, target, block, "acceleration")
 	case "flippermoremotor_motorDidMovement":
 		renderAction(w, target, block, namedInputArg("PORT"))
 	case "flippermoremotor_motorGoToRelativePosition":
@@ -212,7 +212,7 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 		renderAction(w, target, block, namedInputArg("PORT"))
 
 	case "flippermoremove_menu_acceleration":
-		renderAcceleration(w, target, block)
+		renderMenu(w, target, block, "acceleration")
 	case "flippermoremove_moveDistanceAtSpeed":
 		renderAction(w, target, block, namedInputArg("DISTANCE"), namedInputArg("LEFT"), namedInputArg("RIGHT"), namedFieldArg("UNIT"))
 	case "flippermoremove_movementSetAcceleration":
@@ -567,6 +567,12 @@ func renderWhenProgramStarts(w io.Writer, target lmsp.ProjectTarget, block *lmsp
 	fmt.Fprint(w, "when program starts:")
 }
 
+func renderWhenTimer(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	fmt.Fprint(w, "when timer > ")
+	visitInput(w, target, block, "VALUE")
+	fmt.Fprint(w, ":")
+}
+
 func renderWhenButton(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
 	fmt.Fprintf(w, "when %q button %q:", getField(block, "BUTTON"), getField(block, "EVENT"))
 }
@@ -607,40 +613,47 @@ func renderFieldSelector(w io.Writer, target lmsp.ProjectTarget, block *lmsp.Pro
 	fmt.Fprint(w, getField(block, field))
 }
 
-func renderOrientation(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-	field := getField(block, "orientation")
-	switch field {
-	case "1":
-		fmt.Fprint(w, "upright")
-	case "2":
-		fmt.Fprint(w, "left")
-	case "3":
-		fmt.Fprint(w, "right")
-	case "4":
-		fmt.Fprint(w, "upside down")
-	default:
-		fmt.Fprintf(w, "[orientation %q]", field)
-	}
+var menus = map[lmsp.ProjectOpcode]map[string]string{
+	"flipperdisplay_menu_orientation": {
+		"1": "upright",
+		"2": "left",
+		"3": "right",
+		"4": "upside down",
+	},
+	"flippermoremotor_menu_acceleration": {
+		"-1 -1":     "default",
+		"100 100":   "fast",
+		"350 350":   "balanced",
+		"800 800":   "smooth",
+		"1200 1200": "slow",
+		"2000 2000": "very slow",
+	},
+	"flippermoremove_menu_acceleration": {
+		"-1 -1":     "default",
+		"100 100":   "fast",
+		"350 350":   "balanced",
+		"800 800":   "smooth",
+		"1200 1200": "slow",
+		"2000 2000": "very slow",
+	},
 }
 
-func renderAcceleration(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-	field := getField(block, "acceleration")
-	switch field {
-	case "-1 -1":
-		fmt.Fprint(w, "default")
-	case "100 100":
-		fmt.Fprint(w, "fast")
-	case "350 350":
-		fmt.Fprint(w, "balanced")
-	case "800 800":
-		fmt.Fprint(w, "smooth")
-	case "1200 1200":
-		fmt.Fprint(w, "slow")
-	case "2000 2000":
-		fmt.Fprint(w, "very slow")
-	default:
-		fmt.Fprint(w, field)
+func renderMenu(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject, field lmsp.ProjectFieldName) {
+	value := getField(block, field)
+
+	menu, ok := menus[block.Opcode]
+	if !ok {
+		fmt.Fprintf(w, "[unknown menu type %s %q]", block.Opcode, value)
+		return
 	}
+
+	menuValue, ok := menu[value]
+	if !ok {
+		fmt.Fprintf(w, "[%s: %q]", block.Opcode, value)
+		return
+	}
+
+	fmt.Fprint(w, menuValue)
 }
 
 func renderBetween(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
