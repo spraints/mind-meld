@@ -11,7 +11,7 @@ target: j2kW7HqkRlyqy4KHAyn6
   ----- 4Y7|,FHwxxHR-uG,Os+q -----
   radiobroadcast_radioSignalReporter(signal: signal171)
   ----- =Nz[b0CwVKK7I30J#ic- -----
-  (((math.abs([variable yahey]) mod round(relativePosition(port: A))) < motorPower(port: A)) AND flippersensors_buttonIsPressed(button: left, event: pressed))
+  (((math.abs([variable yahey]) mod round(relativePosition(port: A))) < motorPower(port: A)) AND isButtonPressed(button: left, event: pressed))
   ----- ?_a,!|Im04:;F|()E`Rv -----
   when program starts:
     broadcast([broadcast "message1"])
@@ -31,7 +31,7 @@ target: j2kW7HqkRlyqy4KHAyn6
   when gesture "shake" occurs:
     move(direction: forward, cm: 10)
     write(text: "Hello")
-    if flippersensors_isDistance(comparator: <, port: A, unit: %, value: 15):
+    if (distance(port: A) < 15 %):
       beep(note: 60)
     setMovementStopMethod(stop: brake)
   ----- QOG2Po6Z:5rehv:?bOCP -----
@@ -48,10 +48,10 @@ target: j2kW7HqkRlyqy4KHAyn6
     wait until [missing input: "CONDITION"]
     move(steering: 0, speed: 50, distance: 10, unit: cm)
   ----- [U`i$zl!QrB`5}s/]Mq~ -----
-  flippersensors_ismotion(motion: shake)
+  isGesture(motion: shake)
   ----- [d_M?(f#~}c(l_]b$O|] -----
   when timer > 10:
-    setMovementSpeed(percent: flippersensors_motion())
+    setMovementSpeed(percent: gesture())
     rotateDisplay(direction: clockwise)
     sound_cleareffects()
     [variable yahey] = pressure(port: A, unit: %)
@@ -68,15 +68,15 @@ target: j2kW7HqkRlyqy4KHAyn6
   when "space" key pressed:
     setMovementMotors(pair: AB)
     setDisplayRotation(orientation: upright)
-    sound_changevolumeby(volume: flippersensors_orientation())
-    flippersensors_resetTimer()
+    sound_changevolumeby(volume: orientation())
+    resetTimer()
     [variable yahey] = [variable yahey] + [unset number]
     goToRelativePosition(port: A, position: 0, speed: 100)
   ----- f^aJ+eOLo4bPQcDMr!e` -----
   when (reflectivity(port: A) < 50):
-    startMoving(steering: flippersensors_timer())
+    startMoving(steering: timer())
     setPixelBrightness(brightness: 75)
-    sound_changeeffectby(effect: PITCH, value: flippersensors_distance(port: A, unit: %))
+    sound_changeeffectby(effect: PITCH, value: distance(port: A, unit: %))
     stopOtherStacks()
     resetYaw()
     setRelativePosition(port: A, value: 0)
@@ -84,9 +84,9 @@ target: j2kW7HqkRlyqy4KHAyn6
   ((operator_join("apple", "banana") > "100") OR (operator_letter_of("apple", 1) == "100"))
   ----- lIBDT4Dwf_nYQNE^ubEv -----
   when "left" button "pressed":
-    move(steering: 0, cm: flippersensors_color(port: A))
+    move(steering: 0, cm: color(port: A))
     turnOffPixels()
-    if flippersensors_isColor(port: A, value: operator_random(from: 1, to: 10)):
+    if isColor(port: A, value: operator_random(from: 1, to: 10)):
       stopSound()
     else:
     
@@ -102,7 +102,7 @@ target: j2kW7HqkRlyqy4KHAyn6
     startMotor(port: A, power: 100)
     stop(all)
   ----- q[D.+7+CrX!.BEnOIH9K -----
-  flippersensors_isorientation(orientation: front)
+  isUp(orientation: front)
   ----- u8z_~EX${ts)+$bB?t25 -----
   0
   ----- v/Q~-2JR1Y7G}5S7WZyb -----
@@ -113,7 +113,7 @@ target: j2kW7HqkRlyqy4KHAyn6
   [port A] when distance < 8 %:
     stopMotor(port: A)
     turnOnPixels(matrix: 9909999099000009000909990, seconds: 2)
-    repeat flippersensors_reflectivity(port: A) times:
+    repeat reflectedLight(port: A) times:
       playSound(sound: {"name":"Cat Meow 1","location":"device"})
     setStopMethod(port: A, stop: 1)
     startMovingAtSpeed(steering: 0, speed: 50)

@@ -279,7 +279,7 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 	case "flippersensors_isColor":
 		renderAction(w, target, block, namedInputArg("PORT"), namedInputArg("VALUE"))
 	case "flippersensors_isDistance":
-		renderAction(w, target, block, namedFieldArg("COMPARATOR"), namedInputArg("PORT"), namedFieldArg("UNIT"), namedInputArg("VALUE"))
+		renderIsDistance(w, target, block)
 	case "flippersensors_ismotion":
 		renderAction(w, target, block, namedFieldArg("MOTION"))
 	case "flippersensors_isorientation":
@@ -495,11 +495,23 @@ var opcodeActions = map[lmsp.ProjectOpcode]string{
 	"flippermove_steer":           "move",
 	"flippermove_stopMove":        "stopMoving",
 
+	"flippersensors_buttonIsPressed": "isButtonPressed",
+	"flippersensors_color":           "color",
+	"flippersensors_distance":        "distance",
+	"flippersensors_isColor":         "isColor",
+	"flippersensors_ismotion":        "isGesture",
+	"flippersensors_isorientation":   "isUp",
+	"flippersensors_motion":          "gesture",
+	"flippersensors_orientation":     "orientation",
 	"flippersensors_orientationAxis": "angle",
+	"flippersensors_reflectivity":    "reflectedLight",
+	"flippersensors_resetTimer":      "resetTimer",
 	"flippersensors_resetYaw":        "resetYaw",
-	"flippersound_beep":              "beep",
-	"flippersound_playSound":         "playSound",
-	"flippersound_stopSound":         "stopSound",
+	"flippersensors_timer":           "timer",
+
+	"flippersound_beep":      "beep",
+	"flippersound_playSound": "playSound",
+	"flippersound_stopSound": "stopSound",
 }
 
 // renderAction visits a block that is like a function call. These may be script
@@ -712,6 +724,14 @@ func renderBetween(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBl
 	fmt.Fprint(w, " and ")
 	visitInput(w, target, block, "HIGH")
 	fmt.Fprint(w, "])")
+}
+
+func renderIsDistance(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
+	fmt.Fprint(w, "(distance(port: ")
+	visitInput(w, target, block, "PORT")
+	fmt.Fprintf(w, ") %s ", getField(block, "COMPARATOR"))
+	visitInput(w, target, block, "VALUE")
+	fmt.Fprintf(w, " %s)", getField(block, "UNIT"))
 }
 
 func renderIsReflectivity(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
