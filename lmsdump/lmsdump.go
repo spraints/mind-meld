@@ -473,6 +473,12 @@ var opcodeActions = map[lmsp.ProjectOpcode]string{
 	"flippermoremove_startSteerAtSpeed":       "startMovingAtSpeed",
 	"flippermoremove_steerDistanceAtSpeed":    "move",
 
+	"flippermoresensors_acceleration":    "acceleration",
+	"flippermoresensors_angularVelocity": "angularVelocity",
+	"flippermoresensors_force":           "pressure",
+	"flippermoresensors_isPressed":       "isPressed",
+	"flippermoresensors_rawColor":        "rawColor",
+
 	"flippermotor_absolutePosition":           "position",
 	"flippermotor_motorGoDirectionToPosition": "goToPosition",
 	"flippermotor_motorSetSpeed":              "setMotorSpeed",

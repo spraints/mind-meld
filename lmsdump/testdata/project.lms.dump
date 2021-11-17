@@ -5,7 +5,7 @@ target: j2kW7HqkRlyqy4KHAyn6
   ----- +hSb,YZLRIZ`JZ.E]C.4 -----
   wasMotorInterrupted(port: A)
   ----- +n#SwHZBl7=5t3*pRS._ -----
-  flippermoresensors_isPressed(port: A, option: pressed)
+  isPressed(port: A, option: pressed)
   ----- ,C($,v-gId,e$Q^N?jHb -----
   NOT((operator_length(string: "apple") between [-10 and 10]))
   ----- 4Y7|,FHwxxHR-uG,Os+q -----
@@ -37,7 +37,7 @@ target: j2kW7HqkRlyqy4KHAyn6
   ----- QOG2Po6Z:5rehv:?bOCP -----
   0
   ----- RbyPD2Fx3{Mu$P%a)gY9 -----
-  flippermoresensors_angularVelocity(axis: z)
+  angularVelocity(axis: z)
   ----- T#}{8$tC(nH$PI#`%Ll? -----
   radiobroadcast_whenIReceiveRadioSignalHat(signal: signal171)
   ----- Y[,f/3suV5MD1Qn}0M=F -----
@@ -54,8 +54,8 @@ target: j2kW7HqkRlyqy4KHAyn6
     setMovementSpeed(percent: flippersensors_motion())
     rotateDisplay(direction: clockwise)
     sound_cleareffects()
-    [variable yahey] = flippermoresensors_force(port: A, unit: %)
-    startMotor(port: A, speed: flippermoresensors_acceleration(axis: x))
+    [variable yahey] = pressure(port: A, unit: %)
+    startMotor(port: A, speed: acceleration(axis: x))
   ----- cq)7G*j,#9J`U;^?erQm -----
   when "front" is up:
     setMotorSpeed(port: A, speed: 75)
@@ -90,7 +90,7 @@ target: j2kW7HqkRlyqy4KHAyn6
       stopSound()
     else:
     
-    runMotor(port: A, speed: 75, rotations: flippermoresensors_rawColor(color: 0, port: A))
+    runMotor(port: A, speed: 75, rotations: rawColor(color: 0, port: A))
     setMovementAcceleration(default)
   ----- npn[Q4Gg{)^$rj+yW-r/ -----
   60
@@ -106,7 +106,7 @@ target: j2kW7HqkRlyqy4KHAyn6
   ----- u8z_~EX${ts)+$bB?t25 -----
   0
   ----- v/Q~-2JR1Y7G}5S7WZyb -----
-  flippermoresensors_acceleration(axis: x)
+  acceleration(axis: x)
   ----- vCgCL_#_[PvTNrt|=8TR -----
   sensing_keypressed(space)
   ----- x;Gn89g$]H8rAd%]5QDy -----
