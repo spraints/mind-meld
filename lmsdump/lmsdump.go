@@ -214,7 +214,7 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 	case "flippermoremove_menu_acceleration":
 		renderMenu(w, target, block, "acceleration")
 	case "flippermoremove_moveDistanceAtSpeed":
-		renderAction(w, target, block, namedInputArg("DISTANCE"), namedInputArg("LEFT"), namedInputArg("RIGHT"), namedFieldArg("UNIT"))
+		renderAction(w, target, block, namedInputArg("LEFT"), namedInputArg("RIGHT"), namedInputArg("DISTANCE"), namedFieldArg("UNIT"))
 	case "flippermoremove_movementSetAcceleration":
 		renderAction(w, target, block, inputArg("ACCELERATION"))
 	case "flippermoremove_movementSetStopMethod":
@@ -226,7 +226,7 @@ func visitBlock(w io.Writer, target lmsp.ProjectTarget, id lmsp.ProjectBlockID) 
 	case "flippermoremove_startSteerAtSpeed":
 		renderAction(w, target, block, namedInputArg("STEERING"), namedInputArg("SPEED"))
 	case "flippermoremove_steerDistanceAtSpeed":
-		renderAction(w, target, block, namedInputArg("DISTANCE"), namedInputArg("SPEED"), namedInputArg("STEERING"), namedFieldArg("UNIT"))
+		renderAction(w, target, block, namedInputArg("STEERING"), namedInputArg("SPEED"), namedInputArg("DISTANCE"), namedFieldArg("UNIT"))
 
 	case "flippermoresensors_acceleration":
 		renderAction(w, target, block, namedFieldArg("AXIS"))
@@ -464,8 +464,14 @@ var opcodeActions = map[lmsp.ProjectOpcode]string{
 	"flippermoremotor_position":                  "relativePosition",
 	"flippermoremotor_power":                     "motorPower",
 
-	"flippermoremove_movementSetAcceleration": "setMovementAcceleration",
 	"flippermoremove_moveDidMovement":         "wasMovementInterrupted",
+	"flippermoremove_moveDistanceAtSpeed":     "moveAtSpeed",
+	"flippermoremove_movementSetAcceleration": "setMovementAcceleration",
+	"flippermoremove_movementSetStopMethod":   "setMovementStopMethod",
+	"flippermoremove_startDualPower":          "startMovingAtPower",
+	"flippermoremove_startDualSpeed":          "startMovingAtSpeed",
+	"flippermoremove_startSteerAtSpeed":       "startMovingAtSpeed",
+	"flippermoremove_steerDistanceAtSpeed":    "move",
 
 	"flippermotor_absolutePosition":           "position",
 	"flippermotor_motorGoDirectionToPosition": "goToPosition",
@@ -516,7 +522,18 @@ func fieldArg(fieldName lmsp.ProjectFieldName) argFn {
 func namedFieldArg(fieldName lmsp.ProjectFieldName) argFn {
 	label := strings.ToLower(string(fieldName))
 	return func(w io.Writer, target lmsp.ProjectTarget, block *lmsp.ProjectBlockObject) {
-		fmt.Fprintf(w, "%s: %v", label, getField(block, fieldName))
+		value := getField(block, fieldName)
+		if block.Opcode == "flippermoremove_movementSetStopMethod" && fieldName == "STOP" {
+			switch value {
+			case "1":
+				value = "brake"
+			case "2":
+				value = "hold position"
+			case "3":
+				value = "coast"
+			}
+		}
+		fmt.Fprintf(w, "%s: %v", label, value)
 	}
 }
 
