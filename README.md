@@ -13,3 +13,7 @@ On your computer, install mind-meld and set up mind-meld's git diff tool.
 
     $ go install github.com/spraints/mind-meld@latest # or download a release
     $ git config --global diff.mind-meld.textconv 'mind-meld git-diff'
+
+Now, git log will look like this:
+
+![git log example](docs/git-log.png)
