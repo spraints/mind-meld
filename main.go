@@ -15,7 +15,7 @@ import (
 )
 
 func main() {
-	usage := fmt.Sprintf("Usage: %s [dump FILE | ls | browse]", os.Args[0])
+	usage := fmt.Sprintf("Usage: %s [dump FILE | info FILE | ls | browse]", os.Args[0])
 
 	if len(os.Args) < 2 {
 		fmt.Println(usage)
@@ -33,6 +33,8 @@ func main() {
 		finish(githooks.RunPreCommit(mode))
 	case "dump":
 		finish(dump(os.Args[2]))
+	case "info":
+		finish(showInfo(os.Args[2]))
 	case "ls":
 		finish(ls())
 	case "browse":
@@ -87,6 +89,25 @@ func dump(path string) error {
 
 	// todo later - print out programs in pybricks
 
+	return nil
+}
+
+func showInfo(path string) error {
+	f, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	l, err := lmsp.ReadFile(f)
+	if err != nil {
+		return err
+	}
+	m, err := l.Manifest()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Name: %s\n", m.Name)
+	fmt.Printf("Type: %s\n", m.Type)
+	fmt.Printf("Version: %d\n", m.Version)
 	return nil
 }
 
