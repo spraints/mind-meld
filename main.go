@@ -69,6 +69,21 @@ func dump(path string) error {
 		spew.Dump(man)
 	*/
 
+	m, err := l.Manifest()
+	if err != nil {
+		return err
+	}
+	if m.Type == "python" {
+		pythonSrc, err := l.Python()
+		if err != nil {
+			return err
+		}
+		for name, src := range pythonSrc {
+			fmt.Printf("# %s\n%s\n", name, src)
+		}
+		return nil
+	}
+
 	proj, err := l.Project()
 	if err != nil {
 		return err
