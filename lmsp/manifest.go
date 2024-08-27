@@ -3,7 +3,8 @@ package lmsp
 import "time"
 
 type Manifest struct {
-	Type          string    `json:"type"` // always "word-blocks" for EV3?
+	Type          string    `json:"type"`    // "word-blocks", "icon-blocks", or "python"
+	AppType       string    `json:"appType"` // "llsp3" for python programs
 	AutoDelete    bool      `json:"autoDelete"`
 	Created       time.Time `json:"created"`
 	ID            string    `json:"id"`
@@ -14,8 +15,8 @@ type Manifest struct {
 	WorkspaceX    float64   `json:"workspaceX"`
 	WorkspaceY    float64   `json:"workspaceY"`
 	ZoomLevel     float64   `json:"zoomLevel"`
-	ShowAllBlocks bool      `json:"showAllBlocks"`
-	Version       int       `json:"version"` // always 5 for EV3?
+	ShowAllBlocks bool      `json:"showAllBlocks"` // only for blocks
+	Version       int       `json:"version"`       // examples: EV3 = 5, spike = 38
 	Hardware      map[string]struct {
 		Name               string `json:"name"` // name of EV3 brick
 		Connection         string `json:"connection"`

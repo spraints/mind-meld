@@ -26,6 +26,7 @@ var (
 	ErrNoManifest = errors.New("no manifest found")
 	ErrNoScratch  = errors.New("no scratch data found")
 	ErrNoProject  = errors.New("no project found")
+	ErrNoPython   = errors.New("no python code found")
 )
 
 func ReadFile(f *os.File) (*Reader, error) {
@@ -61,6 +62,24 @@ func (r *Reader) Manifest() (Manifest, error) {
 	}
 	defer fr.Close()
 
+	err = json.NewDecoder(fr).Decode(&res)
+	return res, err
+}
+
+// Python reads the python source from projectbody.json in the lego zip file.
+func (r *Reader) Python() (map[string]string, error) {
+	f := get(r.zr, "projectbody.json")
+	if f == nil {
+		return nil, ErrNoPython
+	}
+
+	fr, err := f.Open()
+	if err != nil {
+		return nil, err
+	}
+	defer fr.Close()
+
+	res := map[string]string{}
 	err = json.NewDecoder(fr).Decode(&res)
 	return res, err
 }

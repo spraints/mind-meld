@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
+	"path/filepath"
 
 	"github.com/spraints/mind-meld/githooks"
 	"github.com/spraints/mind-meld/lmsdump"
@@ -13,8 +15,10 @@ import (
 )
 
 func main() {
+	usage := fmt.Sprintf("Usage: %s [dump FILE | info FILE | ls | browse]", os.Args[0])
+
 	if len(os.Args) < 2 {
-		fmt.Printf("Usage: %s [dump FILE | browse]\n", os.Args[0])
+		fmt.Println(usage)
 		os.Exit(1)
 	}
 
@@ -29,10 +33,14 @@ func main() {
 		finish(githooks.RunPreCommit(mode))
 	case "dump":
 		finish(dump(os.Args[2]))
+	case "info":
+		finish(showInfo(os.Args[2]))
+	case "ls":
+		finish(ls())
 	case "browse":
 		finish(ui.Run())
 	default:
-		fmt.Printf("Usage: %s [dump FILE]\n", os.Args[0])
+		fmt.Println(usage)
 		os.Exit(1)
 	}
 }
@@ -61,6 +69,21 @@ func dump(path string) error {
 		spew.Dump(man)
 	*/
 
+	m, err := l.Manifest()
+	if err != nil {
+		return err
+	}
+	if m.Type == "python" {
+		pythonSrc, err := l.Python()
+		if err != nil {
+			return err
+		}
+		for name, src := range pythonSrc {
+			fmt.Printf("# %s\n%s\n", name, src)
+		}
+		return nil
+	}
+
 	proj, err := l.Project()
 	if err != nil {
 		return err
@@ -82,4 +105,48 @@ func dump(path string) error {
 	// todo later - print out programs in pybricks
 
 	return nil
+}
+
+func showInfo(path string) error {
+	f, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	l, err := lmsp.ReadFile(f)
+	if err != nil {
+		return err
+	}
+	m, err := l.Manifest()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Name: %s\n", m.Name)
+	fmt.Printf("Type: %s\n", m.Type)
+	fmt.Printf("Version: %d\n", m.Version)
+	return nil
+}
+
+func ls() error {
+	home := os.Getenv("HOME")
+	if home == "" {
+		return fmt.Errorf("HOME must be set in order to find mindstorms files")
+	}
+
+	const (
+		spikenextDir     = "Library/Containers/com.lego.education.spikenext/Data/Documents/LEGO Education SPIKE"
+		robotinventorDir = "Library/Containers/com.lego.retail.mindstorms.robotinventor/Data/Documents/LEGO MINDSTORMS"
+		ev3Dir           = "Documents/LEGO Education EV3 Content"
+	)
+
+	c := exec.Command("find",
+		".",
+		filepath.Join(home, spikenextDir),
+		filepath.Join(home, robotinventorDir),
+		filepath.Join(home, ev3Dir),
+		"-type", "f",
+		"(", "-name", "*.lmsp", "-or", "-name", "*.lms", "-or", "-name", "*.llsp3", ")",
+		"-ls")
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+	return c.Run()
 }
