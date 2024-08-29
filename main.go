@@ -8,6 +8,9 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/spraints/mind-meld/appcmd"
+	"github.com/spraints/mind-meld/appcmd/sync"
+	"github.com/spraints/mind-meld/apps/mindstormsapp"
 	"github.com/spraints/mind-meld/githooks"
 	"github.com/spraints/mind-meld/lmsdump"
 	"github.com/spraints/mind-meld/lmsp"
@@ -26,6 +29,8 @@ func mkRootCmd() *cobra.Command {
 	root.AddCommand(mkBrowseCmd())
 	root.AddCommand(mkDumpCmd())
 	root.AddCommand(mkPreCommitCmd())
+
+	root.AddCommand(mkAppSubcommandCmd("mindstorms", mindstormsapp.New()))
 	return root
 }
 
@@ -66,6 +71,29 @@ func mkPreCommitCmd() *cobra.Command {
 		},
 	}
 	cmd.PersistentFlags().BoolVar(&cached, "cached", false, "update index instead of working copy")
+	return cmd
+}
+
+func mkAppSubcommandCmd(name string, a appcmd.App) *cobra.Command {
+	subCmd := &cobra.Command{
+		Use:   name,
+		Short: "Manage " + a.FullName() + " programs.",
+	}
+
+	subCmd.AddCommand(mkAppFetchCommand(a))
+
+	return subCmd
+}
+
+func mkAppFetchCommand(a appcmd.App) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "fetch",
+		Short: "Synchronize python programs between " + a.FullName() + " and a Git repository in the current directory.",
+		Args:  cobra.NoArgs,
+		RunE: func(*cobra.Command, []string) error {
+			return sync.Run(a)
+		},
+	}
 	return cmd
 }
 
