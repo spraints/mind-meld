@@ -23,7 +23,7 @@ func Run(app appcmd.App) error {
 
 	blobs := map[string]plumbing.Hash{}
 	for _, project := range projects {
-		data, err := readProject(project)
+		data, err := readPythonProject(project)
 		if err != nil {
 			return fmt.Errorf("%s: %w", project.Name, err)
 		}
@@ -33,7 +33,7 @@ func Run(app appcmd.App) error {
 			if err != nil {
 				return fmt.Errorf("%s: %w", project.Name, err)
 			}
-			blobs[project.Name] = oid
+			blobs[project.Name+".py"] = oid
 		}
 	}
 
@@ -86,7 +86,7 @@ func walkProjectDir(dirname string, prefix string, result []project) ([]project,
 	return result, nil
 }
 
-func readProject(proj project) ([]byte, error) {
+func readPythonProject(proj project) ([]byte, error) {
 	f, err := os.Open(proj.Path)
 	if err != nil {
 		return nil, err
