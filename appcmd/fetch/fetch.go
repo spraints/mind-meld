@@ -42,8 +42,19 @@ func Run(app appcmd.App) error {
 		return err
 	}
 
-	return createCommit(g, plumbing.ReferenceName(app.RemoteName()), tree,
+	commitID, err := createCommit(g, plumbing.ReferenceName(app.RemoteName()), tree,
 		"Update copy of "+app.FullName()+" python programs")
+	if err != nil {
+		return err
+	}
+
+	if commitID.IsZero() {
+		fmt.Printf("%s: no changes found.\n", app.RemoteName())
+	} else {
+		fmt.Printf("%s: created commit %v\n", app.RemoteName(), commitID)
+	}
+
+	return nil
 }
 
 type project struct {
@@ -148,7 +159,7 @@ func createTree(g *git.Repository, blobs map[string]plumbing.Hash) (treeID, erro
 	return tb.Build(g)
 }
 
-func createCommit(g *git.Repository, refName plumbing.ReferenceName, tree treeID, commitMsg string) error {
+func createCommit(g *git.Repository, refName plumbing.ReferenceName, tree treeID, commitMsg string) (plumbing.Hash, error) {
 	// Check the ref.
 	// If the tree is the same, there's nothing to do.
 	// If the ref is there, use its OID as the parent commit.
@@ -156,10 +167,10 @@ func createCommit(g *git.Repository, refName plumbing.ReferenceName, tree treeID
 	if ref, err := g.Reference(refName, false); err == nil {
 		c, err := g.CommitObject(ref.Hash())
 		if err != nil {
-			return err
+			return plumbing.ZeroHash, err
 		}
 		if c.TreeHash == tree {
-			return nil
+			return plumbing.ZeroHash, nil
 		}
 		parentHashes = append(parentHashes, ref.Hash())
 	}
@@ -167,7 +178,7 @@ func createCommit(g *git.Repository, refName plumbing.ReferenceName, tree treeID
 	// Get an author and committer to use for the commit.
 	var o git.CommitOptions
 	if err := o.Validate(g); err != nil {
-		return err
+		return plumbing.ZeroHash, err
 	}
 
 	// Build the commit.
@@ -181,14 +192,19 @@ func createCommit(g *git.Repository, refName plumbing.ReferenceName, tree treeID
 	// Save the commit.
 	obj := g.Storer.NewEncodedObject()
 	if err := c.Encode(obj); err != nil {
-		return err
+		return plumbing.ZeroHash, err
 	}
 
 	commitID, err := g.Storer.SetEncodedObject(obj)
 	if err != nil {
-		return err
+		return plumbing.ZeroHash, err
+	}
+
+	if os.Getenv("FOO") == "FOO" {
+		w, _ := g.Worktree()
+		w.Commit("", nil)
 	}
 
 	// Update the reference.
-	return g.Storer.SetReference(plumbing.NewHashReference(refName, commitID))
+	return commitID, g.Storer.SetReference(plumbing.NewHashReference(refName, commitID))
 }
