@@ -1,15 +1,18 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 
 	"github.com/spf13/cobra"
 
 	"github.com/spraints/mind-meld/appcmd"
 	"github.com/spraints/mind-meld/appcmd/fetch"
+	"github.com/spraints/mind-meld/appcmd/watch"
 	"github.com/spraints/mind-meld/apps/mindstormsapp"
 	"github.com/spraints/mind-meld/githooks"
 	"github.com/spraints/mind-meld/lmsdump"
@@ -87,12 +90,13 @@ func mkAppSubcommandCmd(name string, a appcmd.App) *cobra.Command {
 	}
 
 	subCmd.AddCommand(mkAppFetchCommand(a))
+	subCmd.AddCommand(mkAppWatchCommand(a))
 
 	return subCmd
 }
 
 func mkAppFetchCommand(a appcmd.App) *cobra.Command {
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "fetch",
 		Short: "Synchronize python programs between " + a.FullName() + " and a Git repository in the current directory.",
 		Args:  cobra.NoArgs,
@@ -100,7 +104,20 @@ func mkAppFetchCommand(a appcmd.App) *cobra.Command {
 			return fetch.Run(a)
 		},
 	}
-	return cmd
+}
+
+func mkAppWatchCommand(a appcmd.App) *cobra.Command {
+	return &cobra.Command{
+		Use:   "watch",
+		Short: "Continuously synchronize python programs between " + a.FullName() + " and a Git repository in the current directory.",
+		Args:  cobra.NoArgs,
+		RunE: func(*cobra.Command, []string) error {
+			ctx := context.Background()
+			ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
+			defer cancel()
+			return watch.Run(ctx, a)
+		},
+	}
 }
 
 func finish(err error) {
