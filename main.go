@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/spraints/mind-meld/appcmd"
-	"github.com/spraints/mind-meld/appcmd/sync"
+	"github.com/spraints/mind-meld/appcmd/fetch"
 	"github.com/spraints/mind-meld/apps/mindstormsapp"
 	"github.com/spraints/mind-meld/githooks"
 	"github.com/spraints/mind-meld/lmsdump"
@@ -26,11 +26,13 @@ func mkRootCmd() *cobra.Command {
 		Use:   "mind-meld",
 		Short: "Manage your LEGO MINDSTORMS",
 	}
+
 	root.AddCommand(mkBrowseCmd())
 	root.AddCommand(mkDumpCmd())
 	root.AddCommand(mkPreCommitCmd())
 
 	root.AddCommand(mkAppSubcommandCmd("mindstorms", mindstormsapp.New()))
+
 	return root
 }
 
@@ -38,9 +40,13 @@ func mkBrowseCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "browse",
 		Short: "Browse for a file and see inside of it!",
-		Args:  cobra.NoArgs,
-		RunE: func(*cobra.Command, []string) error {
-			return ui.Run()
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(_ *cobra.Command, args []string) error {
+			var opts ui.Opts
+			if len(args) == 1 {
+				opts.Workdir = args[0]
+			}
+			return ui.Run(opts)
 		},
 	}
 }
@@ -91,7 +97,7 @@ func mkAppFetchCommand(a appcmd.App) *cobra.Command {
 		Short: "Synchronize python programs between " + a.FullName() + " and a Git repository in the current directory.",
 		Args:  cobra.NoArgs,
 		RunE: func(*cobra.Command, []string) error {
-			return sync.Run(a)
+			return fetch.Run(a)
 		},
 	}
 	return cmd

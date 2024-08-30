@@ -1,15 +1,17 @@
 package ui
 
 import (
-	"os"
-
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func Run() error {
-	pwd, err := os.Getwd()
-	if err != nil {
-		return err
+type Opts struct {
+	Workdir string
+}
+
+func Run(opts Opts) error {
+	startdir := opts.Workdir
+	if startdir == "" {
+		startdir = "."
 	}
-	return tea.NewProgram(fileBrowser{dir: pwd}).Start()
+	return tea.NewProgram(fileBrowser{dir: startdir}).Start()
 }

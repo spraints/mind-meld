@@ -24,6 +24,7 @@ type Reader struct {
 
 var (
 	ErrNoManifest = errors.New("no manifest found")
+	ErrNoPython   = errors.New("no python found")
 	ErrNoScratch  = errors.New("no scratch data found")
 	ErrNoProject  = errors.New("no project found")
 )
@@ -102,6 +103,26 @@ func (r *Reader) Project() (Project, error) {
 
 	err = json.NewDecoder(pr).Decode(&res)
 	return res, err
+}
+
+// Python reads python source from the file.
+func (r *Reader) Python() (string, error) {
+	var projectbody struct {
+		Main string `json:"main"`
+	}
+
+	f := get(r.zr, "projectbody.json")
+	if f == nil {
+		return "", ErrNoPython
+	}
+
+	pr, err := f.Open()
+	if err != nil {
+		return "", err
+	}
+
+	err = json.NewDecoder(pr).Decode(&projectbody)
+	return projectbody.Main, err
 }
 
 func get(r *zip.Reader, name string) *zip.File {
