@@ -103,7 +103,9 @@ func mkAppFetchCommand(a appcmd.App) *cobra.Command {
 		Long: `Get python programs from ` + a.FullName() + `.
 
 When --git is specified, the programs are stored as a new commit on the given
-branch or ref.`,
+branch or ref.
+
+When --dir is specified, the programs are stored in the given directory.`,
 		Args: cobra.NoArgs,
 		RunE: func(*cobra.Command, []string) error {
 			return fetch.Run(a, target)
@@ -132,14 +134,17 @@ func mkAppWatchCommand(a appcmd.App) *cobra.Command {
 
 func addTargetFlags(cmd *cobra.Command, target *fetch.Target) {
 	cmd.Flags().Var(&gitTarget{target}, "git", "fetch to the given ref in a git repository")
+	cmd.Flags().Var(&dirTarget{target}, "dir", "fetch to the given directory")
 }
+
+const defaultTarget = ""
 
 type gitTarget struct {
 	target *fetch.Target
 }
 
 func (g gitTarget) String() string {
-	return ""
+	return defaultTarget
 }
 
 func (g gitTarget) Set(s string) error {
@@ -152,6 +157,26 @@ func (g gitTarget) Set(s string) error {
 
 func (g gitTarget) Type() string {
 	return "REF"
+}
+
+type dirTarget struct {
+	target *fetch.Target
+}
+
+func (d dirTarget) String() string {
+	return defaultTarget
+}
+
+func (d dirTarget) Set(s string) error {
+	if *d.target != nil {
+		return fmt.Errorf("only one of --git and --dir may be specified")
+	}
+	*d.target = fetch.DirTarget(s)
+	return nil
+}
+
+func (d dirTarget) Type() string {
+	return "DIR"
 }
 
 func finish(err error) {
