@@ -96,7 +96,7 @@ func mkAppSubcommandCmd(name string, a appcmd.App) *cobra.Command {
 }
 
 func mkAppFetchCommand(a appcmd.App) *cobra.Command {
-	var target fetch.Target
+	var opts fetchOpts
 	cmd := &cobra.Command{
 		Use:   "fetch",
 		Short: "Get python programs from " + a.FullName() + ".",
@@ -108,18 +108,20 @@ branch or ref.
 When --dir is specified, the programs are stored in the given directory.`,
 		Args: cobra.NoArgs,
 		RunE: func(*cobra.Command, []string) error {
-			if target == nil {
-				return fmt.Errorf("one of --git or --dir must be specified")
+			target, err := opts.MakeTarget()
+			if err != nil {
+				return err
 			}
+
 			return fetch.Run(a, target)
 		},
 	}
-	addTargetFlags(cmd, &target)
+	opts.AddFlags(cmd)
 	return cmd
 }
 
 func mkAppWatchCommand(a appcmd.App) *cobra.Command {
-	var target fetch.Target
+	var opts fetchOpts
 	cmd := &cobra.Command{
 		Use:   "watch",
 		Short: "Continuously fetch python programs from " + a.FullName() + ".",
@@ -128,59 +130,40 @@ func mkAppWatchCommand(a appcmd.App) *cobra.Command {
 			ctx := context.Background()
 			ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
 			defer cancel()
-			if target == nil {
-				return fmt.Errorf("one of --git or --dir must be specified")
+
+			target, err := opts.MakeTarget()
+			if err != nil {
+				return err
 			}
+
 			return watch.Run(ctx, a, target)
 		},
 	}
-	addTargetFlags(cmd, &target)
+	opts.AddFlags(cmd)
 	return cmd
 }
 
-func addTargetFlags(cmd *cobra.Command, target *fetch.Target) {
-	cmd.Flags().Var(&gitTarget{target}, "git", "fetch to the given ref in a git repository")
-	cmd.Flags().Var(&dirTarget{target}, "dir", "fetch to the given directory")
+type fetchOpts struct {
+	GitRef string
+	Dir    string
 }
 
-type gitTarget struct {
-	target *fetch.Target
+func (f *fetchOpts) AddFlags(cmd *cobra.Command) {
+	cmd.Flags().StringVar(&f.GitRef, "git", "", "fetch to the given ref in the current git repository")
+	cmd.Flags().StringVar(&f.Dir, "dir", "", "fetch to the given directory")
 }
 
-func (g gitTarget) String() string {
-	return ""
-}
-
-func (g gitTarget) Set(s string) error {
-	if *g.target != nil {
-		return fmt.Errorf("only one of --git and --dir may be specified")
+func (f fetchOpts) MakeTarget() (fetch.Target, error) {
+	switch {
+	case f.GitRef != "" && f.Dir != "":
+		return nil, fmt.Errorf("only one of --git and --dir may be specified")
+	case f.GitRef != "":
+		return fetch.GitTarget(f.GitRef), nil
+	case f.Dir != "":
+		return fetch.DirTarget(f.Dir), nil
+	default:
+		return nil, fmt.Errorf("one of --git and --dir must be specified")
 	}
-	*g.target = fetch.GitTarget(s)
-	return nil
-}
-
-func (g gitTarget) Type() string {
-	return "REF"
-}
-
-type dirTarget struct {
-	target *fetch.Target
-}
-
-func (d dirTarget) String() string {
-	return ""
-}
-
-func (d dirTarget) Set(s string) error {
-	if *d.target != nil {
-		return fmt.Errorf("only one of --git and --dir may be specified")
-	}
-	*d.target = fetch.DirTarget(s)
-	return nil
-}
-
-func (d dirTarget) Type() string {
-	return "DIR"
 }
 
 func finish(err error) {
