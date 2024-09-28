@@ -14,6 +14,7 @@ import (
 	"github.com/spraints/mind-meld/appcmd/fetch"
 	"github.com/spraints/mind-meld/appcmd/watch"
 	"github.com/spraints/mind-meld/apps/mindstormsapp"
+	"github.com/spraints/mind-meld/apps/spike"
 	"github.com/spraints/mind-meld/githooks"
 	"github.com/spraints/mind-meld/lmsdump"
 	"github.com/spraints/mind-meld/lmsp"
@@ -35,6 +36,7 @@ func mkRootCmd() *cobra.Command {
 	root.AddCommand(mkPreCommitCmd())
 
 	root.AddCommand(mkAppSubcommandCmd("mindstorms", mindstormsapp.New()))
+	root.AddCommand(mkAppSubcommandCmd("spike", spike.New()))
 
 	return root
 }
