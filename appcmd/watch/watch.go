@@ -8,6 +8,7 @@ import (
 
 	"github.com/spraints/mind-meld/appcmd"
 	"github.com/spraints/mind-meld/appcmd/fetch"
+	"github.com/spraints/mind-meld/recnotify"
 )
 
 func Run(ctx context.Context, a appcmd.App, t fetch.Target) error {
@@ -19,7 +20,7 @@ func Run(ctx context.Context, a appcmd.App, t fetch.Target) error {
 
 	anyOK := false
 	for _, d := range a.ProjectDirs() {
-		if err := watcher.Add(d); err != nil {
+		if err := recnotify.AddRecursive(watcher, d); err != nil {
 			fmt.Printf("%s: %v\n", d, err)
 		} else {
 			fmt.Printf("watching %s\n", d)
@@ -36,9 +37,12 @@ func Run(ctx context.Context, a appcmd.App, t fetch.Target) error {
 		case <-ctx.Done():
 			return nil
 
-		case _, ok := <-watcher.Events:
+		case evt, ok := <-watcher.Events:
 			if !ok {
 				return nil
+			}
+			if err := recnotify.MaybeAddRecursive(watcher, evt); err != nil {
+				return err
 			}
 			if err := fetch.Run(a, t); err != nil {
 				return err
