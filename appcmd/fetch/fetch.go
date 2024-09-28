@@ -29,12 +29,12 @@ func Run(app appcmd.App, target Target) error {
 	for _, project := range projects {
 		data, err := readPythonProject(project)
 		if err != nil {
-			return fmt.Errorf("%s: %w", project.Name, err)
+			return fmt.Errorf("%s: %w", project.RelPath, err)
 		}
 
 		if data != nil {
-			if err := t.Add(project.Name+".py", data); err != nil {
-				return fmt.Errorf("%s: %w", project.Name, err)
+			if err := t.Add(pyName(project), data); err != nil {
+				return fmt.Errorf("%s: %w", project.RelPath, err)
 			}
 		}
 	}
@@ -49,8 +49,16 @@ func Run(app appcmd.App, target Target) error {
 	return nil
 }
 
+func pyName(p project) string {
+	ext := filepath.Ext(p.RelPath)
+	bareRelPath := p.RelPath[:len(p.RelPath)-len(ext)]
+	return bareRelPath + ".py"
+}
+
 type project struct {
-	Name string
+	// RelPath is the dirs + filename, relative to the root of mindstorms's storage dir.
+	RelPath string
+	// Path is the original path to the file.
 	Path string
 }
 
@@ -64,14 +72,14 @@ func listProjects(app appcmd.App) ([]project, error) {
 	return nil, fmt.Errorf("no project dir found (checked %v)", app.ProjectDirs())
 }
 
-func walkProjectDir(dirname string, prefix string, result []project) ([]project, error) {
+func walkProjectDir(dirname string, relPrefix string, result []project) ([]project, error) {
 	entries, err := os.ReadDir(dirname)
 	if err != nil {
 		return nil, err
 	}
 	for _, e := range entries {
 		if e.IsDir() {
-			p, err := walkProjectDir(filepath.Join(dirname, e.Name()), prefix+e.Name()+"/", result)
+			p, err := walkProjectDir(filepath.Join(dirname, e.Name()), relPrefix+e.Name()+"/", result)
 			if err != nil {
 				return nil, err
 			}
@@ -81,8 +89,8 @@ func walkProjectDir(dirname string, prefix string, result []project) ([]project,
 
 		if e.Type().IsRegular() {
 			result = append(result, project{
-				Name: prefix + e.Name(),
-				Path: filepath.Join(dirname, e.Name()),
+				RelPath: relPrefix + e.Name(),
+				Path:    filepath.Join(dirname, e.Name()),
 			})
 		}
 	}
@@ -106,7 +114,7 @@ func readPythonProject(proj project) ([]byte, error) {
 	}
 
 	if man.Type != "python" {
-		fmt.Printf("%s: skip %s program\n", proj.Name, man.Type)
+		fmt.Printf("%s: skip %s program\n", proj.RelPath, man.Type)
 		return nil, nil
 	}
 
