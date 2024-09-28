@@ -3,6 +3,7 @@ package watch
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 
@@ -32,6 +33,8 @@ func Run(ctx context.Context, a appcmd.App, t fetch.Target) error {
 		return fmt.Errorf("no watchable directories found")
 	}
 
+	trigger := newTrigger(time.Second)
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -44,6 +47,12 @@ func Run(ctx context.Context, a appcmd.App, t fetch.Target) error {
 			if err := recnotify.MaybeAddRecursive(watcher, evt); err != nil {
 				return err
 			}
+			fmt.Printf("event: %s\n", evt)
+			trigger.Ping()
+
+		case <-trigger.C:
+			trigger.Ack()
+			fmt.Printf("fetching new programs...\n")
 			if err := fetch.Run(a, t); err != nil {
 				return err
 			}
