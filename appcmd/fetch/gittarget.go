@@ -10,18 +10,23 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 )
 
-type GitTarget string
+type GitTarget struct {
+	Ref           string
+	CommitMessage string
+}
 
 func (t GitTarget) refName() plumbing.ReferenceName {
-	if strings.HasPrefix(string(t), "refs/") {
-		return plumbing.ReferenceName(string(t))
+	if strings.HasPrefix(string(t.Ref), "refs/") {
+		return plumbing.ReferenceName(string(t.Ref))
 	}
-	return plumbing.ReferenceName("refs/heads/" + string(t))
+	return plumbing.ReferenceName("refs/heads/" + string(t.Ref))
 }
 
 func (t GitTarget) commitMessage() string {
-	return "Update copy of python programs"
-	//"Update copy of "+app.FullName()+" python programs")
+	if t.CommitMessage != "" {
+		return t.CommitMessage
+	}
+	return "Update copy of mindstorms programs"
 }
 
 func (t GitTarget) Open() (TargetInstance, error) {

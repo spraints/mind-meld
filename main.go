@@ -116,7 +116,7 @@ When --dir is specified, the programs are stored in the given directory.`,
 			return fetch.Run(a, target)
 		},
 	}
-	opts.AddFlags(cmd)
+	opts.AddFlags(cmd, a)
 	return cmd
 }
 
@@ -139,18 +139,21 @@ func mkAppWatchCommand(a appcmd.App) *cobra.Command {
 			return watch.Run(ctx, a, target)
 		},
 	}
-	opts.AddFlags(cmd)
+	opts.AddFlags(cmd, a)
 	return cmd
 }
 
 type fetchOpts struct {
-	GitRef string
-	Dir    string
+	GitRef        string
+	CommitMessage string
+
+	Dir string
 }
 
-func (f *fetchOpts) AddFlags(cmd *cobra.Command) {
+func (f *fetchOpts) AddFlags(cmd *cobra.Command, app appcmd.App) {
 	cmd.Flags().StringVar(&f.GitRef, "git", "", "fetch to the given ref in the current git repository")
 	cmd.Flags().StringVar(&f.Dir, "dir", "", "fetch to the given directory")
+	cmd.Flags().StringVarP(&f.CommitMessage, "message", "m", "Update copy of "+app.FullName()+" python programs", "commit message (when using --git)")
 }
 
 func (f fetchOpts) MakeTarget() (fetch.Target, error) {
@@ -158,7 +161,10 @@ func (f fetchOpts) MakeTarget() (fetch.Target, error) {
 	case f.GitRef != "" && f.Dir != "":
 		return nil, fmt.Errorf("only one of --git and --dir may be specified")
 	case f.GitRef != "":
-		return fetch.GitTarget(f.GitRef), nil
+		return fetch.GitTarget{
+			Ref:           f.GitRef,
+			CommitMessage: f.CommitMessage,
+		}, nil
 	case f.Dir != "":
 		return fetch.DirTarget(f.Dir), nil
 	default:
