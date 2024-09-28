@@ -4,4 +4,4 @@ default:
 
 .PHONY: install
 install:
-	go build -o /usr/local/bin/mind-meld .
+	go build -o /opt/homebrew/bin/mind-meld .
