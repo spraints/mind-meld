@@ -96,28 +96,62 @@ func mkAppSubcommandCmd(name string, a appcmd.App) *cobra.Command {
 }
 
 func mkAppFetchCommand(a appcmd.App) *cobra.Command {
-	return &cobra.Command{
+	var target fetch.Target
+	cmd := &cobra.Command{
 		Use:   "fetch",
-		Short: "Synchronize python programs between " + a.FullName() + " and a Git repository in the current directory.",
-		Args:  cobra.NoArgs,
+		Short: "Get python programs from " + a.FullName() + ".",
+		Long: `Get python programs from ` + a.FullName() + `.
+
+When --git is specified, the programs are stored as a new commit on the given
+branch or ref.`,
+		Args: cobra.NoArgs,
 		RunE: func(*cobra.Command, []string) error {
-			return fetch.Run(a)
+			return fetch.Run(a, target)
 		},
 	}
+	addTargetFlags(cmd, &target)
+	return cmd
 }
 
 func mkAppWatchCommand(a appcmd.App) *cobra.Command {
-	return &cobra.Command{
+	var target fetch.Target
+	cmd := &cobra.Command{
 		Use:   "watch",
-		Short: "Continuously synchronize python programs between " + a.FullName() + " and a Git repository in the current directory.",
+		Short: "Continuously fetch python programs from " + a.FullName() + ".",
 		Args:  cobra.NoArgs,
 		RunE: func(*cobra.Command, []string) error {
 			ctx := context.Background()
 			ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
 			defer cancel()
-			return watch.Run(ctx, a)
+			return watch.Run(ctx, a, target)
 		},
 	}
+	addTargetFlags(cmd, &target)
+	return cmd
+}
+
+func addTargetFlags(cmd *cobra.Command, target *fetch.Target) {
+	cmd.Flags().Var(&gitTarget{target}, "git", "fetch to the given ref in a git repository")
+}
+
+type gitTarget struct {
+	target *fetch.Target
+}
+
+func (g gitTarget) String() string {
+	return ""
+}
+
+func (g gitTarget) Set(s string) error {
+	if *g.target != nil {
+		return fmt.Errorf("only one of --git and --dir may be specified")
+	}
+	*g.target = fetch.GitTarget(s)
+	return nil
+}
+
+func (g gitTarget) Type() string {
+	return "REF"
 }
 
 func finish(err error) {

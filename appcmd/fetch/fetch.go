@@ -18,8 +18,8 @@ type TargetInstance interface {
 	Finish() (string, error)
 }
 
-func Run(app appcmd.App) error {
-	t, err := GitTarget("refs/lego/robot-inventor").Open()
+func Run(app appcmd.App, target Target) error {
+	t, err := target.Open()
 	if err != nil {
 		return err
 	}

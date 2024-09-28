@@ -10,7 +10,7 @@ import (
 	"github.com/spraints/mind-meld/appcmd/fetch"
 )
 
-func Run(ctx context.Context, a appcmd.App) error {
+func Run(ctx context.Context, a appcmd.App, t fetch.Target) error {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return err
@@ -40,7 +40,7 @@ func Run(ctx context.Context, a appcmd.App) error {
 			if !ok {
 				return nil
 			}
-			if err := fetch.Run(a); err != nil {
+			if err := fetch.Run(a, t); err != nil {
 				return err
 			}
 
