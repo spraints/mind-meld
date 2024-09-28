@@ -105,10 +105,12 @@ func mkAppFetchCommand(a appcmd.App) *cobra.Command {
 When --git is specified, the programs are stored as a new commit on the given
 branch or ref.
 
-When --dir is specified, the programs are stored in the given directory.`,
+When --dir is specified, the programs are stored in the given directory.
+
+The default is to store them in the current directory.`,
 		Args: cobra.NoArgs,
 		RunE: func(*cobra.Command, []string) error {
-			return fetch.Run(a, target)
+			return fetch.Run(a, withDefaultTarget(target))
 		},
 	}
 	addTargetFlags(cmd, &target)
@@ -125,7 +127,7 @@ func mkAppWatchCommand(a appcmd.App) *cobra.Command {
 			ctx := context.Background()
 			ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
 			defer cancel()
-			return watch.Run(ctx, a, target)
+			return watch.Run(ctx, a, withDefaultTarget(target))
 		},
 	}
 	addTargetFlags(cmd, &target)
@@ -137,7 +139,14 @@ func addTargetFlags(cmd *cobra.Command, target *fetch.Target) {
 	cmd.Flags().Var(&dirTarget{target}, "dir", "fetch to the given directory")
 }
 
-const defaultTarget = ""
+func withDefaultTarget(target fetch.Target) fetch.Target {
+	if target == nil {
+		return fetch.DirTarget(".")
+	}
+	return target
+}
+
+const defaultTarget = "the current directory"
 
 type gitTarget struct {
 	target *fetch.Target
