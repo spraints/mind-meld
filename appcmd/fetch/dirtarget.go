@@ -17,6 +17,10 @@ func (t DirTarget) Open() (TargetInstance, error) {
 	return &dirTargetInstance{t, 0}, nil
 }
 
+func (t DirTarget) PathSeparator() string {
+	return string(filepath.Separator)
+}
+
 func (t DirTarget) path(name string) string {
 	return filepath.Join(string(t), name)
 }

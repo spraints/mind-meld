@@ -11,6 +11,7 @@ import (
 
 type Target interface {
 	Open() (TargetInstance, error)
+	PathSeparator() string
 }
 
 type TargetInstance interface {
@@ -24,7 +25,7 @@ func Run(app appcmd.App, target Target) error {
 		return err
 	}
 
-	projects, err := listProjects(app)
+	projects, err := listProjects(app, target)
 
 	for _, project := range projects {
 		data, err := readPythonProject(project)
@@ -62,9 +63,9 @@ type project struct {
 	Path string
 }
 
-func listProjects(app appcmd.App) ([]project, error) {
+func listProjects(app appcmd.App, target Target) ([]project, error) {
 	for _, d := range app.ProjectDirs() {
-		found, err := walkProjectDir(d, "", nil)
+		found, err := walkProjectDir(d, "", target.PathSeparator(), nil)
 		if err == nil {
 			return found, nil
 		}
@@ -72,14 +73,14 @@ func listProjects(app appcmd.App) ([]project, error) {
 	return nil, fmt.Errorf("no project dir found (checked %v)", app.ProjectDirs())
 }
 
-func walkProjectDir(dirname string, relPrefix string, result []project) ([]project, error) {
+func walkProjectDir(dirname string, relPrefix string, sep string, result []project) ([]project, error) {
 	entries, err := os.ReadDir(dirname)
 	if err != nil {
 		return nil, err
 	}
 	for _, e := range entries {
 		if e.IsDir() {
-			p, err := walkProjectDir(filepath.Join(dirname, e.Name()), relPrefix+e.Name()+"/", result)
+			p, err := walkProjectDir(filepath.Join(dirname, e.Name()), relPrefix+e.Name()+sep, sep, result)
 			if err != nil {
 				return nil, err
 			}

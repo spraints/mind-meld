@@ -37,6 +37,10 @@ func (t GitTarget) Open() (TargetInstance, error) {
 	return &gitTargetInstance{t, repo, map[string]plumbing.Hash{}}, nil
 }
 
+func (t GitTarget) PathSeparator() string {
+	return gitPathSeparator
+}
+
 type gitTargetInstance struct {
 	dest  GitTarget
 	repo  *git.Repository

@@ -10,13 +10,15 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 )
 
+const gitPathSeparator = "/"
+
 type treeBuilder struct {
 	subdirs map[string]*treeBuilder
 	blobs   map[string]plumbing.Hash
 }
 
 func (tb *treeBuilder) Add(path string, oid plumbing.Hash) {
-	parts := strings.SplitN(path, "/", 2)
+	parts := strings.SplitN(path, gitPathSeparator, 2)
 	switch len(parts) {
 	case 1:
 		if tb.blobs == nil {
