@@ -9,6 +9,11 @@ import (
 type DirTarget string
 
 func (t DirTarget) Open() (TargetInstance, error) {
+	if st, err := os.Stat(string(t)); err != nil {
+		return nil, err
+	} else if !st.IsDir() {
+		return nil, fmt.Errorf("%s is not a directory", t)
+	}
 	return &dirTargetInstance{t, 0}, nil
 }
 
@@ -23,7 +28,11 @@ type dirTargetInstance struct {
 
 func (d *dirTargetInstance) Add(name string, data []byte) error {
 	d.count++
-	return os.WriteFile(d.dest.path(name), data, 0o644)
+	destFile := d.dest.path(name)
+	if err := os.MkdirAll(filepath.Dir(destFile), 0o755); err != nil {
+		return err
+	}
+	return os.WriteFile(destFile, data, 0o644)
 }
 
 func (d *dirTargetInstance) Finish() (string, error) {
