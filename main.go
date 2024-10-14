@@ -115,7 +115,13 @@ When --dir is specified, the programs are stored in the given directory.`,
 				return err
 			}
 
-			return fetch.Run(a, target)
+			if msg, err := fetch.Run(a, target); err != nil {
+				fmt.Printf("error:%v\n", err)
+			} else {
+				fmt.Printf("%s.\n", msg)
+			}
+
+			return nil
 		},
 	}
 	opts.AddFlags(cmd, a)

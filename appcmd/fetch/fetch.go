@@ -19,10 +19,10 @@ type TargetInstance interface {
 	Finish() (string, error)
 }
 
-func Run(app appcmd.App, target Target) error {
+func Run(app appcmd.App, target Target) (string, error) {
 	t, err := target.Open()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	projects, err := listProjects(app, target)
@@ -30,24 +30,22 @@ func Run(app appcmd.App, target Target) error {
 	for _, project := range projects {
 		data, err := readPythonProject(project)
 		if err != nil {
-			return fmt.Errorf("%s: %w", project.RelPath, err)
+			return "", fmt.Errorf("%s: %w", project.RelPath, err)
 		}
 
 		if data != nil {
 			if err := t.Add(pyName(project), data); err != nil {
-				return fmt.Errorf("%s: %w", project.RelPath, err)
+				return "", fmt.Errorf("%s: %w", project.RelPath, err)
 			}
 		}
 	}
 
 	msg, err := t.Finish()
 	if err != nil {
-		return fmt.Errorf("error finishing fetch: %w", err)
+		return "", fmt.Errorf("error finishing fetch: %w", err)
 	}
 
-	fmt.Printf("%s.\n", msg)
-
-	return nil
+	return msg, nil
 }
 
 func pyName(p project) string {

@@ -53,8 +53,10 @@ func Run(ctx context.Context, a appcmd.App, t fetch.Target) error {
 		case <-trigger.C:
 			trigger.Ack()
 			fmt.Printf("fetching new programs...\n")
-			if err := fetch.Run(a, t); err != nil {
+			if msg, err := fetch.Run(a, t); err != nil {
 				return err
+			} else {
+				fmt.Printf("%s.\n", msg)
 			}
 
 		case err, ok := <-watcher.Errors:
