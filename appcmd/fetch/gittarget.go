@@ -34,7 +34,7 @@ func (t GitTarget) Open() (TargetInstance, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &gitTargetInstance{t, repo, map[string]plumbing.Hash{}}, nil
+	return &gitTargetInstance{t, repo, newTreeTarget(repo)}, nil
 }
 
 func (t GitTarget) PathSeparator() string {
@@ -42,22 +42,17 @@ func (t GitTarget) PathSeparator() string {
 }
 
 type gitTargetInstance struct {
-	dest  GitTarget
-	repo  *git.Repository
-	blobs map[string]plumbing.Hash
+	dest GitTarget
+	repo *git.Repository
+	tt   *treeTarget
 }
 
 func (g *gitTargetInstance) Add(name string, data []byte) error {
-	oid, err := createBlob(g.repo, data)
-	if err != nil {
-		return err
-	}
-	g.blobs[name] = oid
-	return nil
+	return g.tt.Add(name, data)
 }
 
 func (g *gitTargetInstance) Finish() (string, error) {
-	tree, err := createTree(g.repo, g.blobs)
+	tree, err := g.tt.Finish()
 	if err != nil {
 		return "", err
 	}
@@ -75,41 +70,7 @@ func (g *gitTargetInstance) Finish() (string, error) {
 	return fmt.Sprintf("%s: created commit %v", targetRef, commitID), nil
 }
 
-func createBlob(g *git.Repository, data []byte) (plumbing.Hash, error) {
-	obj := g.Storer.NewEncodedObject()
-	obj.SetType(plumbing.BlobObject)
-
-	w, err := obj.Writer()
-	if err != nil {
-		return plumbing.ZeroHash, err
-	}
-
-	n, err := w.Write(data)
-	if err != nil {
-		return plumbing.ZeroHash, err
-	}
-	if n != len(data) {
-		return plumbing.ZeroHash, fmt.Errorf("incomplete write")
-	}
-
-	if err := w.Close(); err != nil {
-		return plumbing.ZeroHash, err
-	}
-
-	return g.Storer.SetEncodedObject(obj)
-}
-
-type treeID = plumbing.Hash
-
-func createTree(g *git.Repository, blobs map[string]plumbing.Hash) (treeID, error) {
-	var tb treeBuilder
-	for name, oid := range blobs {
-		tb.Add(name, oid)
-	}
-	return tb.Build(g)
-}
-
-func createCommit(g *git.Repository, refName plumbing.ReferenceName, tree treeID, commitMsg string) (plumbing.Hash, error) {
+func createCommit(g *git.Repository, refName plumbing.ReferenceName, tree plumbing.Hash, commitMsg string) (plumbing.Hash, error) {
 	// Check the ref.
 	// If the tree is the same, there's nothing to do.
 	// If the ref is there, use its OID as the parent commit.
