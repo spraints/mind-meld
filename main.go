@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/spraints/mind-meld/appcmd"
+	"github.com/spraints/mind-meld/appcmd/diff"
 	"github.com/spraints/mind-meld/appcmd/fetch"
 	"github.com/spraints/mind-meld/appcmd/watch"
 	"github.com/spraints/mind-meld/apps/mindstormsapp"
@@ -91,10 +92,28 @@ func mkAppSubcommandCmd(name string, a appcmd.App) *cobra.Command {
 		Short: "Manage " + a.FullName() + " programs.",
 	}
 
+	subCmd.AddCommand(mkAppDiffCommand(a))
 	subCmd.AddCommand(mkAppFetchCommand(a))
 	subCmd.AddCommand(mkAppWatchCommand(a))
 
 	return subCmd
+}
+
+func mkAppDiffCommand(a appcmd.App) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "diff COMMIT",
+		Short: "Diff python programs from " + a.FullName() + ".",
+		Long: `Diff python programs from ` + a.FullName() + ` against COMMIT.
+
+COMMIT may be a branch name, ref name, commit OID, or anything that
+git-rev-parse can resolve to a commit.`,
+		Args: cobra.ExactArgs(1),
+		RunE: func(_ *cobra.Command, args []string) error {
+			baseRev := args[0]
+			return diff.Run(a, baseRev)
+		},
+	}
+	return cmd
 }
 
 func mkAppFetchCommand(a appcmd.App) *cobra.Command {
