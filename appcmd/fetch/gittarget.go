@@ -34,17 +34,17 @@ func (t GitTarget) Open() (TargetInstance, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &gitTargetInstance{t, repo, newTreeTarget(repo)}, nil
+	return &gitTargetInstance{t, repo, NewTreeBuilder(repo)}, nil
 }
 
 func (t GitTarget) PathSeparator() string {
-	return gitPathSeparator
+	return GitPathSeparator
 }
 
 type gitTargetInstance struct {
 	dest GitTarget
 	repo *git.Repository
-	tt   *treeTarget
+	tt   *TreeBuilder
 }
 
 func (g *gitTargetInstance) Add(name string, data []byte) error {

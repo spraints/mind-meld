@@ -7,19 +7,19 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 )
 
-type treeTarget struct {
+type TreeBuilder struct {
 	repo  *git.Repository
 	blobs map[string]plumbing.Hash
 }
 
-func newTreeTarget(repo *git.Repository) *treeTarget {
-	return &treeTarget{
+func NewTreeBuilder(repo *git.Repository) *TreeBuilder {
+	return &TreeBuilder{
 		repo:  repo,
 		blobs: map[string]plumbing.Hash{},
 	}
 }
 
-func (tt *treeTarget) Add(name string, data []byte) error {
+func (tt *TreeBuilder) Add(name string, data []byte) error {
 	oid, err := createBlob(tt.repo, data)
 	if err != nil {
 		return err
@@ -28,7 +28,7 @@ func (tt *treeTarget) Add(name string, data []byte) error {
 	return nil
 }
 
-func (tt *treeTarget) Finish() (plumbing.Hash, error) {
+func (tt *TreeBuilder) Finish() (plumbing.Hash, error) {
 	return createTree(tt.repo, tt.blobs)
 }
 
