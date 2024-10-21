@@ -1,8 +1,17 @@
 # Mind Meld - inspect LEGO Mindstorms Scratch programs
 
-`mind-meld` exists to help you see what's changed in your Mindstorms programs. One common use-case is with `.lmsp` or `.lms` programs that are versioned with Git. In this case, `mind-meld` can help you see what changed in each commit.
+`mind-meld` exists to help you see what's changed in your Mindstorms programs.
 
-## Fetch python programs into a directory
+It has two modes of operation:
+
+1. It can fetch Python programs from the Spike or Mindstorms app and save them
+   to a directory or Git branch.
+
+2. It can show you what's changed between two block programs.
+
+## Python
+
+### Fetch python programs into a directory
 
 For example, to see what changes you're making, you might do this:
 
@@ -25,7 +34,7 @@ $ git diff
 # Commit them if you like at this point.
 ```
 
-## Fetch python programs into a Git branch
+### Fetch python programs into a Git branch
 
 You might also just want to build a Git branch that contains the changes to
 your Python programs.
@@ -71,7 +80,9 @@ $ git checkout .
 $ git clean -fd
 ```
 
-## View diffs with mind-meld
+## Blocks
+
+### View diffs with mind-meld
 
 In your repository, add this to `.gitattributes` and check it in.
 
