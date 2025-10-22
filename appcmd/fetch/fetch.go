@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/spraints/mind-meld/appcmd"
+	"github.com/spraints/mind-meld/globals"
 	"github.com/spraints/mind-meld/lmsp"
 )
 
@@ -63,6 +64,9 @@ type project struct {
 
 func listProjects(app appcmd.App, target Target) ([]project, error) {
 	for _, d := range app.ProjectDirs() {
+		if globals.Verbose {
+			fmt.Printf("looking for projects in %s...\n", d)
+		}
 		found, err := walkProjectDir(d, "", target.PathSeparator(), nil)
 		if err == nil {
 			return found, nil
@@ -115,6 +119,8 @@ func readPythonProject(proj project) ([]byte, error) {
 	if man.Type != "python" {
 		fmt.Printf("%s: skip %s program\n", proj.RelPath, man.Type)
 		return nil, nil
+	} else if globals.Verbose {
+		fmt.Printf("%s: process %s program\n", proj.RelPath, man.Type)
 	}
 
 	program, err := l.Python()
