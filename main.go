@@ -17,6 +17,7 @@ import (
 	"github.com/spraints/mind-meld/apps/mindstormsapp"
 	"github.com/spraints/mind-meld/apps/spike"
 	"github.com/spraints/mind-meld/githooks"
+	"github.com/spraints/mind-meld/globals"
 	"github.com/spraints/mind-meld/lmsdump"
 	"github.com/spraints/mind-meld/lmsp"
 	"github.com/spraints/mind-meld/ui"
@@ -31,6 +32,8 @@ func mkRootCmd() *cobra.Command {
 		Use:   "mind-meld",
 		Short: "Manage your LEGO MINDSTORMS",
 	}
+
+	globals.AddFlags(root.PersistentFlags())
 
 	root.AddCommand(mkBrowseCmd())
 	root.AddCommand(mkDumpCmd())
